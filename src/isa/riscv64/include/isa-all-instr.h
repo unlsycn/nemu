@@ -1,5 +1,5 @@
-#include <cpu/decode.h>
 #include "../local-include/rtl.h"
+#include <cpu/decode.h>
 
 #define INSTR_LIST(f) f(auipc) f(ld) f(sd) f(inv) f(nemu_trap)
 
