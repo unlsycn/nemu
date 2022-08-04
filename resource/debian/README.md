@@ -4,6 +4,7 @@
 制作需要`qemu-riscv64-static`, 建议在debian 10或ubuntu 19.04的系统(可尝试使用docker)中进行操作.
 
 * 创建空镜像和分区
+
 ```
 dd if=/dev/zero of=debian.img bs=1G count=16  # 此处镜像大小为16GB
 sudo cfdisk debian.img # 可创建两个分区, 第一个分区12GB作为rootfs, 第二个分区4GB作为swap
@@ -12,34 +13,42 @@ ls /dev/loop0* # 此时应该能看到/dev/loop0p1和/dev/loop0p2两个分区
 ```
 
 * 创建ext4和swap文件系统
+
 ```
 sudo mkfs.ext4 /dev/loop0p1
 sudo mkswap /dev/loop0p2
 ```
 
 * 挂载ext4分区
+
 ```
 sudo mount /dev/loop0p1 /mnt
 ```
 
 * 安装debian base system.
 下面两条命令的操作来自[debian社区的安装指南](https://wiki.debian.org/RISC-V#debootstrap).
+
 ```
 sudo apt-get install debootstrap qemu-user-static binfmt-support debian-ports-archive-keyring
 sudo debootstrap --arch=riscv64 --keyring /usr/share/keyrings/debian-ports-archive-keyring.gpg --include=debian-ports-archive-keyring unstable /mnt http://deb.debian.org/debian-ports
 ```
+
 若要安装x86系统, 则输入
+
 ```
 sudo debootstrap --arch=i386 --keyring /usr/share/keyrings/debian-archive-keyring.gpg --include=debian-archive-keyring stable /mnt http://deb.debian.org/debian
 ```
 
 * 进入镜像
+
 ```
 sudo chroot /mnt /bin/bash
 ```
+
 此时实际上是通过`qemu-riscv64-static`来执行镜像中的riscv64可执行文件.
 
 * 安装所需工具(根据实际情况选择)
+
 ```
 apt-get update
 apt-get install gcc build-essential
@@ -51,11 +60,13 @@ agt-get install sbt
 ```
 
 * 在`/etc/fstab`中添加swap分区
+
 ```
 /dev/mmcblk0p2 none swap sw 0 0
 ```
 
 * 添加/root/目录的写和执行权限, 使得host上的普通用户可以访问
+
 ```
 chmod a+w,a+x /root
 ```
@@ -63,6 +74,7 @@ chmod a+w,a+x /root
 * 在/root/目录下提前写入所需的测试文件, 如hello.c等.
 
 * 在/root/.bashrc中添加如下内容, 可以实现登录后自动运行命令(根据实际情况修改测试的命令):
+
 ```
 TMP_DIR=/run/mytest
 
@@ -128,6 +140,7 @@ echo -e "\n============ End of preset commands =============\n"
 
 * 若在不方便输入的环境(如NEMU, verilator仿真等)中测试, 可采用如下两种方式的其中一种, 避免登录时输入
   * 通过紧急模式登录
+
 ```
 cd /lib/systemd/system
 # 通过紧急模式登录, 不启动非必须的服务, 节省将近一半的登录时间
@@ -137,7 +150,9 @@ vim emergency.service
   -ExecStart=-/lib/systemd/systemd-sulogin-shell emergency
   +ExecStart=-/bin/bash
 ```
-  * 免密码登录, 见[这里](https://superuser.com/questions/969923/automatic-root-login-in-debian-8-0-console-only)
+
+* 免密码登录, 见[这里](https://superuser.com/questions/969923/automatic-root-login-in-debian-8-0-console-only)
+
 ```
 cd /lib/systemd/system
 vim serial-getty@.service
@@ -146,6 +161,7 @@ vim serial-getty@.service
 ```
 
 * 退出并卸载镜像
+
 ```
 exit  # 之前通过`chroot`方式进入
 sudo umount /mnt  # 记得卸载! 在未卸载镜像的情况下通过可写方式再次打开`debian.img`(如作为qemu的文件系统), 镜像将会损坏!

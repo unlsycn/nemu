@@ -10,6 +10,7 @@
 * 在menuconfig中取消`General setup -> Initial RAM filesystem and RAM disk (initramfs/initrd) support`
 * 在menuconfig中选中`Device Drivers -> MMC/SD/SDIO card support`
 * 在dts中加入以下节点
+
 ```
 / {
   soc {
@@ -32,16 +33,17 @@
 来达到确定性可重复的仿真效果.
 
 具体只需修改以下文件:
+
 ```diff
 --- linux/drivers/mmc/core/block.c
 +++ linux/drivers/mmc/core/block.c
 @@ -983,6 +983,7 @@ static int card_busy_detect(struct mmc_card *card, unsigned int timeout_ms,
- 	int err = 0;
- 	u32 status;
+  int err = 0;
+  u32 status;
  
 +  return err;
- 	do {
- 		bool done = time_after(jiffies, timeout);
+  do {
+   bool done = time_after(jiffies, timeout);
  
 --- linux/drivers/mmc/core/core.h
 +++ linux/drivers/mmc/core/core.h
@@ -50,9 +52,9 @@
  static inline void mmc_delay(unsigned int ms)
  {
 +  return;
- 	if (ms <= 20)
- 		usleep_range(ms * 1000, ms * 1250);
- 	else
+  if (ms <= 20)
+   usleep_range(ms * 1000, ms * 1250);
+  else
 ```
 
 注意: 上述修改仅能用于模拟和仿真, 修改后将不能在真实的SD卡上运行!!!
