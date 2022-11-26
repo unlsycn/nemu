@@ -5,7 +5,7 @@
 
 word_t expr(char *e, bool *success);
 
-bool is_cmd(char *str);
+void sdb_error(char *loc, char *format, ...);
 
 // expr   -> cmd args
 // args   -> cmd args

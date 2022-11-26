@@ -3,8 +3,12 @@
 #include <isa.h>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include <stdarg.h>
 
 static int is_batch_mode = false;
+
+static char *stmt = NULL;
+static bool error_unhandled = false; // global error flag
 
 void init_regex();
 void init_wp_pool();
@@ -30,10 +34,16 @@ static char *rl_gets()
     return line_read;
 }
 
-static int cmd_c(char *args)
+/* output error info */
+void sdb_error(char *loc, char *format, ...)
 {
-    cpu_exec(-1);
-    return 0;
+    va_list VA_ARGS;
+    va_start(VA_ARGS, format);
+    printf("Error: %*s", (int)(loc - stmt), "^");
+    vprintf(format, VA_ARGS);
+    printf("\n");
+    va_end(VA_ARGS);
+    error_unhandled = true;
 }
 
 static int cmd_q(char *args)
@@ -42,56 +52,11 @@ static int cmd_q(char *args)
     return -1;
 }
 
-static int cmd_help(char *args);
-
-static struct
-{
-    const char *name;
-    const char *description;
-    int (*handler)(char *);
-} cmd_table[] = {
-    {"help", "Display information about all supported commands", cmd_help},
-    {"c", "Continue the execution of the program", cmd_c},
-    {"q", "Exit NEMU", cmd_q},
-
-    /* TODO: Add more commands */
-
-};
-
-#define NR_CMD ARRLEN(cmd_table)
-
-static int cmd_help(char *args)
-{
-    /* extract the first argument */
-    char *arg = strtok(NULL, " ");
-    int i;
-
-    if (arg == NULL)
-    {
-        /* no argument given */
-        for (i = 0; i < NR_CMD; i++)
-        {
-            printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
-        }
-    }
-    else
-    {
-        for (i = 0; i < NR_CMD; i++)
-        {
-            if (strcmp(arg, cmd_table[i].name) == 0)
-            {
-                printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
-                return 0;
-            }
-        }
-        printf("Unknown command '%s'\n", arg);
-    }
-    return 0;
-}
-
-void sdb_set_batch_mode()
-{
-    is_batch_mode = true;
+#define check_error              \
+    if (error_unhandled)         \
+    {                            \
+        error_unhandled = false; \
+        continue;                \
 }
 
 void sdb_mainloop()

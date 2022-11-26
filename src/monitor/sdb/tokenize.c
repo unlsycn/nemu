@@ -19,9 +19,8 @@ bool token_equal(Token *token, char *str)
     cur->next = new_token(kind, begin, end); \
     cur = cur->next;
 
-#define error(format, ...)                               \
-    printf("Error: %*s^", (int)(stmt - head->loc), " "); \
-    printf(format, ##__VA_ARGS__);                       \
+#define error(loc, format, ...)            \
+    sdb_error(loc, format, ##__VA_ARGS__); \
     return head;
 
 Token *tokenize(char *stmt)
@@ -83,12 +82,12 @@ Token *tokenize(char *stmt)
             } while (isalpha(*stmt) || isdigit(*stmt));
             if (*stmt != '\0' && *stmt != ' ')
             {
-                error("Expected an space after commands");
+                error(stmt + 1, "Expected an space after commands.");
             }
             next_token(TK_CMD, beg, stmt);
             continue;
         }
-        error("Invalid Token");
+        error(stmt, "Invalid Token.");
     }
     next_token(TK_EOL, stmt, stmt);
     return head->next;
