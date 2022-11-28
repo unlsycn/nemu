@@ -63,7 +63,8 @@ ASTValue mul_handler(ASTNode *this)
 }
 ASTValue div_handler(ASTNode *this)
 {
-    this->value.i = LHS / RHS;
+    word_t rhs = RHS;
+    this->value.i = rhs == 0 ? 0 : LHS / rhs;
     ret_val;
 }
 ASTValue not_handler(ASTNode *this)
@@ -83,7 +84,7 @@ ASTValue neg_handler(ASTNode *this)
 }
 ASTValue deref_handler(ASTNode *this)
 {
-    this->value.i = vaddr_read(LHS, 1); // NOT TEST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    this->value.i = vaddr_read(LHS, 1);
     ret_val;
 }
 ASTValue reg_handler(ASTNode *this)
