@@ -158,12 +158,7 @@ struct TokenDef
     Handler handler;
 };
 
-struct Operator
-{
-    const char *str;
-    const ASTNodeType type;
-    Handler handler;
-};
+bool is_double_punct(char *str);
 
 struct ASTNode
 {

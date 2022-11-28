@@ -129,6 +129,17 @@ static int index_op(TokenDef *op)
     return -1;
 }
 
+bool is_double_punct(char *str)
+{
+    for (int i = 0; i < NR_OP; i++)
+    {
+        const char *op = op_table[i].str;
+        if (op[1] != '\0' && memcmp(str, op, 2) == 0)
+            return true;
+    }
+    return false;
+}
+
 #pragma region AST_node
 
 static ASTNode *new_AST_node(ASTNodeType type)

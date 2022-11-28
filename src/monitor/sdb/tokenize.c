@@ -1,27 +1,23 @@
 #include "sdb.h"
 #include <ctype.h>
 
-static Token *new_token(TokenKind kind, char *begin, char *end)
+static Token *new_token(TokenType type, char *begin, char *end)
 {
     Token *token = calloc(1, sizeof(Token));
-    token->kind = kind;
+    token->type = type;
     token->loc = begin;
     token->length = end - begin;
     return token;
 }
 
-bool token_equal(Token *token, char *str)
+bool token_equal(Token *token, const char *str)
 {
     return memcmp(token->loc, str, token->length) == 0 && str[token->length] == '\0';
 }
 
-#define next_token(kind, begin, end)         \
-    cur->next = new_token(kind, begin, end); \
+#define next_token(type, begin, end)         \
+    cur->next = new_token(type, begin, end); \
     cur = cur->next;
-
-#define error(loc, format, ...)            \
-    sdb_error(loc, format, ##__VA_ARGS__); \
-    return head;
 
 Token *tokenize(char *stmt)
 {
@@ -66,7 +62,7 @@ Token *tokenize(char *stmt)
         {
             beg = stmt;
             stmt++;
-            if (ispunct(*stmt))
+            if (is_double_punct(beg))
             {
                 stmt++;
             }
@@ -82,12 +78,14 @@ Token *tokenize(char *stmt)
             } while (isalpha(*stmt) || isdigit(*stmt));
             if (*stmt != '\0' && *stmt != ' ')
             {
-                error(stmt + 1, "Expected an space after commands.");
+                sdb_error(stmt + 1, "Expected an space after commands.");
+                return head;
             }
             next_token(TK_CMD, beg, stmt);
             continue;
         }
-        error(stmt, "Invalid Token.");
+        sdb_error(stmt, "Invalid Token.");
+        return head;
     }
     next_token(TK_EOL, stmt, stmt);
     return head->next;
