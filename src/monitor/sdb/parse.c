@@ -64,7 +64,8 @@ ASTValue mul_handler(ASTNode *this)
 ASTValue div_handler(ASTNode *this)
 {
     word_t rhs = RHS;
-    this->value.i = rhs == 0 ? 0 : LHS / rhs;
+    Assert(rhs != 0, "Dividing by zero is illegal.");
+    this->value.i = LHS / rhs;
     ret_val;
 }
 ASTValue not_handler(ASTNode *this)
