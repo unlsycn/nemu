@@ -171,6 +171,4 @@ struct ASTNode
 
 ASTNode *parse(Token *tokens);
 
-void traverse_AST(ASTNode *ast);
-
 #endif

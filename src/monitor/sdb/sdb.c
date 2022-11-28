@@ -10,8 +10,18 @@ static int is_batch_mode = false;
 static char *stmt = NULL;
 static bool error_unhandled = false; // global error flag
 
-void init_regex();
 void init_wp_pool();
+
+static void free_tokens(Token *tokens)
+{
+    if (tokens->type == TK_EOL)
+    {
+
+        free(tokens);
+        return;
+    }
+    free_tokens(tokens->next);
+}
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char *rl_gets()
@@ -46,10 +56,9 @@ void sdb_error(char *loc, char *format, ...)
     error_unhandled = true;
 }
 
-static int cmd_q(char *args)
+void sdb_set_batch_mode()
 {
-    nemu_state.state = NEMU_QUIT;
-    return -1;
+    is_batch_mode = true;
 }
 
 #define check_error              \
@@ -57,66 +66,38 @@ static int cmd_q(char *args)
     {                            \
         error_unhandled = false; \
         continue;                \
-}
+    }
 
 void sdb_mainloop()
 {
     if (is_batch_mode)
     {
-        cmd_c(NULL);
+        //        cmd_c(NULL);
         return;
     }
 
-    for (char *str; (str = rl_gets()) != NULL;)
+    for (; (stmt = rl_gets()) != NULL;)
     {
-        char *str_end = str + strlen(str);
+        Token *tokens = tokenize(stmt);
+        check_error;
 
-        /* extract the first token as the command */
-        char *cmd = strtok(str, " ");
-        if (cmd == NULL)
-        {
-            continue;
-        }
+        ASTNode *ast = parse(tokens);
+        check_error;
 
-        /* treat the remaining string as the arguments,
-         * which may need further parsing
-         */
-        char *args = cmd + strlen(cmd) + 1;
-        if (args >= str_end)
-        {
-            args = NULL;
-        }
+        free_tokens(tokens);
+
+        if ((ast->handler(ast)).i > 0)
+            return;
 
 #ifdef CONFIG_DEVICE
         extern void sdl_clear_event_queue();
         sdl_clear_event_queue();
 #endif
-
-        int i;
-        for (i = 0; i < NR_CMD; i++)
-        {
-            if (strcmp(cmd, cmd_table[i].name) == 0)
-            {
-                if (cmd_table[i].handler(args) < 0)
-                {
-                    return;
-                }
-                break;
-            }
-        }
-
-        if (i == NR_CMD)
-        {
-            printf("Unknown command '%s'\n", cmd);
-        }
     }
 }
 
 void init_sdb()
 {
-    /* Compile the regular expressions. */
-    init_regex();
-
     /* Initialize the watchpoint pool. */
     init_wp_pool();
 }
