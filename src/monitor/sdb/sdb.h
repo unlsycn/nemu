@@ -104,7 +104,9 @@ typedef union ASTValue ASTValue;
 
 typedef struct ASTNode ASTNode;
 
-typedef struct Cmd Cmd;
+typedef struct TokenDef TokenDef;
+
+typedef struct Operator Operator;
 
 typedef ASTValue (*Handler)(ASTNode *this);
 
@@ -147,10 +149,18 @@ union ASTValue {
     word_t i;
     char *ch;
 };
-struct Cmd
+
+struct TokenDef
 {
-    const char *name;
+    const char *str;
     const char *description;
+    const ASTNodeType type;
+    Handler handler;
+};
+
+struct Operator
+{
+    const char *str;
     const ASTNodeType type;
     Handler handler;
 };

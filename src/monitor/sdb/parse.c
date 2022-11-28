@@ -5,6 +5,8 @@
 #define LHS this->left_child->handler(this->left_child).i
 #define RHS this->right_child->handler(this->right_child).i
 
+#pragma region handlers
+
 ASTValue subcmd_handler(ASTNode *this)
 {
     ret_val;
@@ -97,6 +99,38 @@ ASTValue number_handler(ASTNode *this)
     ret_val;
 }
 
+#pragma endregion
+
+static TokenDef op_table[] = {{"&&", "logical and", AST_AND, and_handler},
+                              {"==", "equal", AST_EQ, eq_handler},
+                              {"!=", "not equal", AST_NEQ, neq_handler},
+                              {">=", "great than or equal", AST_GE, ge_handler},
+                              {">", "great than", AST_GT, gt_handler},
+                              {"<=", "less than or equal", AST_LE, le_handler},
+                              {"<", "less than", AST_LT, lt_handler},
+                              {"+", "add", AST_ADD, add_handler},
+                              {"-", "subtrate", AST_SUB, sub_handler},
+                              {"*", "multiply", AST_MUL, mul_handler},
+                              {"/", "is divided by", AST_DIV, div_handler},
+                              {"!", "logical not", AST_NOT, not_handler},
+                              {"+", "positive sign", AST_POS, pos_handler},
+                              {"-", "negative sign", AST_NEG, neg_handler},
+                              {"*", "dereference sign", AST_DEREF, deref_handler}};
+
+#define NR_OP ARRLEN(op_table)
+
+#define is_unary(op) (op->type == AST_NOT || op->type == AST_POS || op->type == AST_NEG || op->type == AST_DEREF)
+
+static int index_op(TokenDef *op)
+{
+    for (int i = 0; i < NR_OP; i++)
+        if (op_table[i].type == op->type)
+            return i;
+    return -1;
+}
+
+#pragma region AST_node
+
 static ASTNode *new_AST_node(ASTNodeType type)
 {
     ASTNode *node = calloc(1, sizeof(ASTNode));
@@ -157,6 +191,8 @@ static ASTNode *new_AST_number(Token *number)
     return node;
 }
 
+#pragma endregion
+
 /* interrupt current statement if assert fails */
 #define sdb_assert(token, offset, cond, format, ...)           \
     if (!(cond))                                               \
@@ -176,7 +212,6 @@ static ASTNode *new_AST_number(Token *number)
 
 /* tokens_ptr returns the position of the pointer in the linked list to the upper level */
 static ASTNode *parse_expr(Token *tokens, Token **tokens_ptr);
-/* functions are listed in order of priority */
 
 static ASTNode *parse_number_reg_bracket(Token *tokens, Token **tokens_ptr)
 {
@@ -185,157 +220,52 @@ static ASTNode *parse_number_reg_bracket(Token *tokens, Token **tokens_ptr)
     {
         node = new_AST_number(tokens);
     }
-    if (tokens->type == TK_REG)
+    else if (tokens->type == TK_REG)
     {
         node = new_AST_reg(tokens);
     }
-    if (token_equal(tokens, "("))
+    else if (token_equal(tokens, "("))
     {
         node = parse_expr(tokens->next, &tokens);
         assert_str(tokens, ")", "Expected a \")\".");
+    }
+    else
+    {
+        node = NULL;
+        sdb_error(tokens->loc + 1, "Unexpected token.");
     }
     *tokens_ptr = tokens->next;
     return node;
 }
 
-/* unary +, - and * must locate behind the number, so we parse the operator before entering the next level */
-static ASTNode *parse_deref(Token *tokens, Token **tokens_ptr)
+static ASTNode *parse_operator(Token *tokens, Token **tokens_ptr, TokenDef *op)
 {
-    if (token_equal(tokens, "*"))
+    ASTNode *node;
+    TokenDef *next_op = &op_table[index_op(op) + 1];
+    if (is_unary(op)) // unary operators
     {
-        return new_AST_unary(AST_DEREF, parse_deref(tokens->next, &tokens), deref_handler);
+        if (token_equal(tokens, op->str))
+        {
+            // unary must locate behind the expression, so we parse the operator before entering the next level
+            return new_AST_unary(op->type, parse_operator(tokens->next, &tokens, op), op->handler);
+        }
+        if (index_op(op) == NR_OP - 1) // the last level
+        {
+            node = parse_number_reg_bracket(tokens, &tokens);
+        }
+        else
+        {
+            node = parse_operator(tokens, &tokens, next_op);
+        }
     }
-    ASTNode *node = parse_number_reg_bracket(tokens, &tokens);
-    *tokens_ptr = tokens;
-    return node;
-}
-
-static ASTNode *parse_pos_neg(Token *tokens, Token **tokens_ptr)
-{
-    if (token_equal(tokens, "+"))
+    else // binary operators
     {
-        return new_AST_unary(AST_POS, parse_pos_neg(tokens->next, &tokens), pos_handler);
-    }
-    if (token_equal(tokens, "-"))
-    {
-        return new_AST_unary(AST_NEG, parse_pos_neg(tokens->next, &tokens), neg_handler);
-    }
-    ASTNode *node = parse_deref(tokens, &tokens);
-    *tokens_ptr = tokens;
-    return node;
-}
-
-static ASTNode *parse_not(Token *tokens, Token **tokens_ptr)
-{
-    ASTNode *node = parse_pos_neg(tokens, &tokens);
-    while (token_equal(tokens, "!"))
-    {
-        node = new_AST_unary(AST_NOT, parse_pos_neg(tokens->next, &tokens), not_handler);
-    }
-    *tokens_ptr = tokens;
-    return node;
-}
-
-static ASTNode *parse_mul_div(Token *tokens, Token **tokens_ptr)
-{
-    ASTNode *node = parse_not(tokens, &tokens);
-    while (tokens->type == TK_PUNCT)
-    {
-        if (token_equal(tokens, "*"))
+        node = parse_operator(tokens, &tokens,
+                              next_op);      // parse until there is nothing of higher priority in the LHS;
+        while (token_equal(tokens, op->str)) // why use while? consider "(2 + 5) && 6 && 1"
         {
-            node = new_AST_binary(AST_MUL, node, parse_not(tokens->next, &tokens), mul_handler);
-            continue;
+            node = new_AST_binary(op->type, node, parse_operator(tokens->next, &tokens, next_op), op->handler);
         }
-        if (token_equal(tokens, "/"))
-        {
-            node = new_AST_binary(AST_DIV, node, parse_not(tokens->next, &tokens), div_handler);
-            continue;
-        }
-        break;
-    }
-    *tokens_ptr = tokens;
-    return node;
-}
-
-static ASTNode *parse_add_sub(Token *tokens, Token **tokens_ptr)
-{
-    ASTNode *node = parse_mul_div(tokens, &tokens);
-    while (tokens->type == TK_PUNCT)
-    {
-        if (token_equal(tokens, "+"))
-        {
-            node = new_AST_binary(AST_ADD, node, parse_mul_div(tokens->next, &tokens), add_handler);
-            continue;
-        }
-        if (token_equal(tokens, "-"))
-        {
-            node = new_AST_binary(AST_SUB, node, parse_mul_div(tokens->next, &tokens), sub_handler);
-            continue;
-        }
-        break;
-    }
-    *tokens_ptr = tokens;
-    return node;
-}
-
-static ASTNode *parse_ge_gt_le_lt(Token *tokens, Token **tokens_ptr)
-{
-    ASTNode *node = parse_add_sub(tokens, &tokens);
-    while (tokens->type == TK_PUNCT)
-    {
-        if (token_equal(tokens, ">="))
-        {
-            node = new_AST_binary(AST_GE, node, parse_add_sub(tokens->next, &tokens), ge_handler);
-            continue;
-        }
-        if (token_equal(tokens, ">"))
-        {
-            node = new_AST_binary(AST_GT, node, parse_add_sub(tokens->next, &tokens), gt_handler);
-            continue;
-        }
-        if (token_equal(tokens, "<="))
-        {
-            node = new_AST_binary(AST_LE, node, parse_add_sub(tokens->next, &tokens), le_handler);
-            continue;
-        }
-        if (token_equal(tokens, "<"))
-        {
-            node = new_AST_binary(AST_LT, node, parse_add_sub(tokens->next, &tokens), lt_handler);
-            continue;
-        }
-        break;
-    }
-    *tokens_ptr = tokens;
-    return node;
-}
-
-static ASTNode *parse_eq_neq(Token *tokens, Token **tokens_ptr)
-{
-    ASTNode *node = parse_ge_gt_le_lt(tokens, &tokens);
-    while (tokens->type == TK_PUNCT)
-    {
-        if (token_equal(tokens, "=="))
-        {
-            node = new_AST_binary(AST_EQ, node, parse_ge_gt_le_lt(tokens->next, &tokens), eq_handler);
-            continue;
-        }
-        if (token_equal(tokens, "!="))
-        {
-            node = new_AST_binary(AST_NEQ, node, parse_ge_gt_le_lt(tokens->next, &tokens), neq_handler);
-            continue;
-        }
-        break;
-    }
-    *tokens_ptr = tokens;
-    return node;
-}
-
-static ASTNode *parse_and(Token *tokens, Token **tokens_ptr)
-{
-    ASTNode *node = parse_eq_neq(tokens, &tokens); // parse until there is nothing of higher priority in the LHS;
-    while (token_equal(tokens, "&&"))              // why use while? consider "(2 + 5) && 6 && 1"
-    {
-        node = new_AST_binary(AST_AND, node, parse_eq_neq(tokens->next, &tokens), and_handler);
     }
     *tokens_ptr = tokens;
     return node;
@@ -344,7 +274,7 @@ static ASTNode *parse_and(Token *tokens, Token **tokens_ptr)
 /* In-Order traversal */
 static ASTNode *parse_expr(Token *tokens, Token **tokens_ptr)
 {
-    ASTNode *node = parse_and(tokens, &tokens);
+    ASTNode *node = parse_operator(tokens, &tokens, &op_table[0]);
     *tokens_ptr = tokens;
     return node;
 }
@@ -360,7 +290,7 @@ static ASTNode *parse_cmd(Token *tokens, Token **tokens_ptr)
         node = new_AST_cmd(tokens);
         last_args(tokens);
     }
-    if (type >= AST_CMD_HELP && type <= AST_CMD_INFO) // cmd subcmd
+    else if (type >= AST_CMD_HELP && type <= AST_CMD_INFO) // cmd subcmd
     {
         node = new_AST_cmd(tokens);
         tokens = tokens->next;
@@ -368,12 +298,12 @@ static ASTNode *parse_cmd(Token *tokens, Token **tokens_ptr)
         node->left_child = new_AST_subcmd(tokens);
         last_args(tokens);
     }
-    if (type >= AST_CMD_SI && type <= AST_CMD_D) // cmd expr
+    else if (type >= AST_CMD_SI && type <= AST_CMD_D) // cmd expr
     {
         node = new_AST_cmd(tokens);
         node->left_child = parse_expr(tokens->next, &tokens);
     }
-    if (type == AST_CMD_X) // cmd N expr
+    else if (type == AST_CMD_X) // cmd N expr
     {
         node = new_AST_cmd(tokens);
         tokens = tokens->next;
@@ -381,7 +311,10 @@ static ASTNode *parse_cmd(Token *tokens, Token **tokens_ptr)
         node->left_child = new_AST_number(tokens);
         node->right_child = parse_expr(tokens->next, &tokens);
     }
-    // panic("Unexpected error: illegal type of the command token \"%s\".", tokens->loc);
+    else
+    {
+        panic("Unexpected error: illegal type of the command token \"%s\".", tokens->loc);
+    }
     *tokens_ptr = tokens;
     return node;
 }
