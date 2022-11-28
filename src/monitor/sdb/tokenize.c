@@ -12,7 +12,7 @@ static Token *new_token(TokenType type, char *begin, char *end)
 
 bool token_equal(Token *token, const char *str)
 {
-    return memcmp(token->loc, str, token->length) == 0 && str[token->length] == '\0';
+    return strncmp(token->loc, str, token->length) == 0 && str[token->length] == '\0';
 }
 
 #define next_token(type, begin, end)         \

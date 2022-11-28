@@ -135,7 +135,7 @@ bool is_double_punct(char *str)
     for (int i = 0; i < NR_OP; i++)
     {
         const char *op = op_table[i].str;
-        if (op[1] != '\0' && memcmp(str, op, 2) == 0)
+        if (op[1] != '\0' && strncmp(str, op, 2) == 0)
             return true;
     }
     return false;
@@ -174,6 +174,7 @@ static ASTNode *new_AST_cmd(Token *cmd)
 {
     ASTNode *node = new_AST_node(type_cmd(cmd));
     node->handler = handler_cmd(cmd);
+    node->value.i = 0;
     return node;
 }
 
