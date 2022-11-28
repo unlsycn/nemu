@@ -258,7 +258,9 @@ static ASTNode *parse_operator(Token *tokens, Token **tokens_ptr, TokenDef *op)
         if (token_equal(tokens, op->str))
         {
             // unary must locate behind the expression, so we parse the operator before entering the next level
-            return new_AST_unary(op->type, parse_operator(tokens->next, &tokens, op), op->handler);
+            node = new_AST_unary(op->type, parse_operator(tokens->next, &tokens, op), op->handler);
+            *tokens_ptr = tokens;
+            return node;
         }
         if (index_op(op) == NR_OP - 1) // the last level
         {
