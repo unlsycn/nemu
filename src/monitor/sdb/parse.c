@@ -315,7 +315,20 @@ static ASTNode *parse_cmd(Token *tokens, Token **tokens_ptr)
     else if (type >= AST_CMD_SI && type <= AST_CMD_D) // cmd expr
     {
         node = new_AST_cmd(tokens);
-        node->left_child = parse_expr(tokens->next, &tokens);
+        tokens = tokens->next;
+        if (tokens->type == TK_EOL) // assign default value
+        {
+            if (type == AST_CMD_SI)
+            {
+                node->left_child = new_AST_node(AST_NUMBER);
+                node->left_child->value.i = 1;
+            }
+            sdb_error(tokens->loc + 1, "Expected an argument.");
+        }
+        else
+        {
+            node->left_child = parse_expr(tokens, &tokens);
+        }
     }
     else if (type == AST_CMD_X) // cmd N expr
     {
