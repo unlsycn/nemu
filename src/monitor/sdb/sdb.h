@@ -72,24 +72,37 @@ typedef enum
     AST_CMD_X,
     // subcmd
     AST_SUBCMD,
-    //&&
-    AST_AND,
+    // ||
+    AST_LOGI_OR,
+    // &&
+    AST_LOGI_AND,
+    // |
+    AST_BIT_OR,
+    // ^
+    AST_BIT_XOR,
+    // &
+    AST_BIT_AND,
     // == !=
     AST_EQ,
     AST_NEQ,
-    // >= > <= <
-    AST_GE,
-    AST_GT,
+    // <= < >= >
     AST_LE,
     AST_LT,
+    AST_GE,
+    AST_GT,
+    // << >>
+    AST_LS,
+    AST_RS,
     // binary + =
     AST_ADD,
     AST_SUB,
-    // * /
+    // * / %
     AST_MUL,
     AST_DIV,
-    // !
-    AST_NOT,
+    AST_MOD,
+    // ! ~
+    AST_LOGI_NOT,
+    AST_BIT_NOT,
     // unary + -
     AST_POS,
     AST_NEG,
@@ -104,9 +117,11 @@ typedef union ASTValue ASTValue;
 
 typedef struct ASTNode ASTNode;
 
-typedef struct TokenDef TokenDef;
+typedef struct Cmd Cmd;
 
 typedef struct Operator Operator;
+
+typedef struct OperatorPrec OperatorPrec;
 
 typedef ASTValue (*Handler)(ASTNode *this);
 
@@ -125,18 +140,26 @@ ASTValue cmd_d(ASTNode *this);
 ASTValue cmd_x(ASTNode *this);
 
 ASTValue subcmd_handler(ASTNode *this);
-ASTValue and_handler(ASTNode *this);
+ASTValue logi_or_handler(ASTNode *this);
+ASTValue logi_and_handler(ASTNode *this);
+ASTValue bit_or_handler(ASTNode *this);
+ASTValue bit_xor_handler(ASTNode *this);
+ASTValue bit_and_handler(ASTNode *this);
 ASTValue eq_handler(ASTNode *this);
 ASTValue neq_handler(ASTNode *this);
-ASTValue ge_handler(ASTNode *this);
-ASTValue gt_handler(ASTNode *this);
 ASTValue le_handler(ASTNode *this);
 ASTValue lt_handler(ASTNode *this);
+ASTValue ge_handler(ASTNode *this);
+ASTValue gt_handler(ASTNode *this);
+ASTValue ls_handler(ASTNode *this);
+ASTValue rs_handler(ASTNode *this);
 ASTValue add_handler(ASTNode *this);
 ASTValue sub_handler(ASTNode *this);
 ASTValue mul_handler(ASTNode *this);
 ASTValue div_handler(ASTNode *this);
-ASTValue not_handler(ASTNode *this);
+ASTValue mod_handler(ASTNode *this);
+ASTValue logi_not_handler(ASTNode *this);
+ASTValue bit_not_handler(ASTNode *this);
 ASTValue pos_handler(ASTNode *this);
 ASTValue neg_handler(ASTNode *this);
 ASTValue deref_handler(ASTNode *this);

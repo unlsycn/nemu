@@ -11,9 +11,29 @@ ASTValue subcmd_handler(ASTNode *this)
 {
     ret_val;
 }
-ASTValue and_handler(ASTNode *this)
+ASTValue logi_or_handler(ASTNode *this)
+{
+    this->value.i = LHS || RHS;
+    ret_val;
+}
+ASTValue logi_and_handler(ASTNode *this)
 {
     this->value.i = LHS && RHS;
+    ret_val;
+}
+ASTValue bit_or_handler(ASTNode *this)
+{
+    this->value.i = LHS | RHS;
+    ret_val;
+}
+ASTValue bit_xor_handler(ASTNode *this)
+{
+    this->value.i = LHS ^ RHS;
+    ret_val;
+}
+ASTValue bit_and_handler(ASTNode *this)
+{
+    this->value.i = LHS & RHS;
     ret_val;
 }
 ASTValue eq_handler(ASTNode *this)
@@ -26,6 +46,16 @@ ASTValue neq_handler(ASTNode *this)
     this->value.i = LHS != RHS;
     ret_val;
 }
+ASTValue le_handler(ASTNode *this)
+{
+    this->value.i = LHS <= RHS;
+    ret_val;
+}
+ASTValue lt_handler(ASTNode *this)
+{
+    this->value.i = LHS < RHS;
+    ret_val;
+}
 ASTValue ge_handler(ASTNode *this)
 {
     this->value.i = LHS >= RHS;
@@ -36,14 +66,14 @@ ASTValue gt_handler(ASTNode *this)
     this->value.i = LHS > RHS;
     ret_val;
 }
-ASTValue le_handler(ASTNode *this)
+ASTValue ls_handler(ASTNode *this)
 {
-    this->value.i = LHS <= RHS;
+    this->value.i = LHS << RHS;
     ret_val;
 }
-ASTValue lt_handler(ASTNode *this)
+ASTValue rs_handler(ASTNode *this)
 {
-    this->value.i = LHS < RHS;
+    this->value.i = LHS >> RHS;
     ret_val;
 }
 ASTValue add_handler(ASTNode *this)
@@ -64,13 +94,25 @@ ASTValue mul_handler(ASTNode *this)
 ASTValue div_handler(ASTNode *this)
 {
     word_t rhs = RHS;
-    Assert(rhs != 0, "Dividing by zero is illegal.");
+    Assert(rhs != 0, "Division by zero is illegal.");
     this->value.i = LHS / rhs;
     ret_val;
 }
-ASTValue not_handler(ASTNode *this)
+ASTValue mod_handler(ASTNode *this)
+{
+    word_t rhs = RHS;
+    Assert(rhs != 0, "Remainder by zero is illegal.");
+    this->value.i = LHS % rhs;
+    ret_val;
+}
+ASTValue logi_not_handler(ASTNode *this)
 {
     this->value.i = !LHS;
+    ret_val;
+}
+ASTValue bit_not_handler(ASTNode *this)
+{
+    this->value.i = ~LHS;
     ret_val;
 }
 ASTValue pos_handler(ASTNode *this)
@@ -135,8 +177,8 @@ bool is_double_punct(char *str)
         for (int i = 0; i < prec->n; i++)
         {
             const char *op = prec->list[i].str;
-        if (op[1] != '\0' && strncmp(str, op, 2) == 0)
-            return true;
+            if (op[1] != '\0' && strncmp(str, op, 2) == 0)
+                return true;
         }
         prec = prec->next;
     }
@@ -262,15 +304,15 @@ static ASTNode *parse_operator(Token *tokens, Token **tokens_ptr, OperatorPrec *
         for (int i = 0; i < prec->n; i++)
         {
             const Operator *op = &prec->list[i];
-        if (token_equal(tokens, op->str))
-        {
-            // unary must locate behind the expression, so we parse the operator before entering the next level
+            if (token_equal(tokens, op->str))
+            {
+                // unary must locate behind the expression, so we parse the operator before entering the next level
                 node = new_AST_unary(op->type, parse_operator(tokens->next, &tokens, prec), op->handler);
                 goto ret;
+            }
         }
-        }
-            node = parse_number_reg_bracket(tokens, &tokens);
-        }
+        node = parse_number_reg_bracket(tokens, &tokens);
+    }
     else // binary operators
     {
         node = parse_operator(tokens, &tokens,
@@ -283,8 +325,8 @@ static ASTNode *parse_operator(Token *tokens, Token **tokens_ptr, OperatorPrec *
             {
                 node = new_AST_binary(op->type, node, parse_operator(tokens->next, &tokens, prec->next), op->handler);
                 goto loop;
+            }
         }
-    }
         goto ret;
     }
 ret:
