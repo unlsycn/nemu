@@ -26,7 +26,11 @@ gdb: run-env
 	$(call git_commit, "gdb NEMU")
 	gdb -s $(BINARY) --args $(NEMU_EXEC)
 
-vscode-gdb: run-env
+lldb: run-env
+	$(call git_commit, "lldb NEMU")
+	lldb $(BINARY) -- $(ARGS) $(IMG)
+
+vscode-debug: run-env
 	$(call git_commit, "debug NEMU in VSCode")
 	@eval echo "BINARY=$(BINARY)\\\nARGS=$(ARGS) $(IMG)" > $(NEMU_HOME)/build/vscode-gdb-args
 	
