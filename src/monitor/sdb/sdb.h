@@ -150,12 +150,26 @@ union ASTValue {
     char *ch;
 };
 
-struct TokenDef
+struct Cmd
 {
-    const char *str;
+    const char *name;
     const char *description;
     const ASTNodeType type;
     Handler handler;
+};
+
+struct Operator
+{
+    const char *str;
+    const ASTNodeType type;
+    Handler handler;
+};
+
+struct OperatorPrec
+{
+    const int n;
+    OperatorPrec *next;
+    const Operator list[];
 };
 
 bool is_double_punct(char *str);

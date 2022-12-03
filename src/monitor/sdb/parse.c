@@ -101,43 +101,44 @@ ASTValue number_handler(ASTNode *this)
     ret_val;
 }
 
+static OperatorPrec unary = {5,
+                             NULL,
+                             {{"!", AST_LOGI_NOT, logi_not_handler},
+                              {"~", AST_BIT_NOT, bit_not_handler},
+                              {"+", AST_POS, pos_handler},
+                              {"-", AST_NEG, neg_handler},
+                              {"*", AST_DEREF, deref_handler}}};
+static OperatorPrec mul_div_mod = {
+    3, &unary, {{"*", AST_MUL, mul_handler}, {"/", AST_DIV, div_handler}, {"%", AST_MOD, mod_handler}}};
+static OperatorPrec add_sub = {2, &mul_div_mod, {{"+", AST_ADD, add_handler}, {"-", AST_SUB, sub_handler}}};
+static OperatorPrec shift = {2, &add_sub, {{"<<", AST_LS, ls_handler}, {">>", AST_RS, rs_handler}}};
+static OperatorPrec relation = {
+    4,
+    &shift,
+    {{"<=", AST_LE, le_handler}, {"<", AST_LT, lt_handler}, {">=", AST_GE, ge_handler}, {">", AST_GT, gt_handler}}};
+static OperatorPrec eq = {2, &relation, {{"==", AST_EQ, eq_handler}, {"!=", AST_NEQ, neq_handler}}};
+static OperatorPrec bit_and = {1, &eq, {{"&", AST_BIT_AND, bit_and_handler}}};
+static OperatorPrec bit_xor = {1, &bit_and, {{"^", AST_BIT_XOR, bit_xor_handler}}};
+static OperatorPrec bit_or = {1, &bit_xor, {{"|", AST_BIT_OR, bit_or_handler}}};
+static OperatorPrec logi_and = {1, &bit_or, {{"&&", AST_LOGI_AND, logi_and_handler}}};
+static OperatorPrec logi_or = {1, &logi_and, {{"||", AST_LOGI_OR, logi_or_handler}}};
+
 #pragma endregion
 
-static TokenDef op_table[] = {{"&&", "logical and", AST_AND, and_handler},
-                              {"==", "equal", AST_EQ, eq_handler},
-                              {"!=", "not equal", AST_NEQ, neq_handler},
-                              {">=", "great than or equal", AST_GE, ge_handler},
-                              {">", "great than", AST_GT, gt_handler},
-                              {"<=", "less than or equal", AST_LE, le_handler},
-                              {"<", "less than", AST_LT, lt_handler},
-                              {"+", "add", AST_ADD, add_handler},
-                              {"-", "subtrate", AST_SUB, sub_handler},
-                              {"*", "multiply", AST_MUL, mul_handler},
-                              {"/", "is divided by", AST_DIV, div_handler},
-                              {"!", "logical not", AST_NOT, not_handler},
-                              {"+", "positive sign", AST_POS, pos_handler},
-                              {"-", "negative sign", AST_NEG, neg_handler},
-                              {"*", "dereference sign", AST_DEREF, deref_handler}};
-
-#define NR_OP ARRLEN(op_table)
-
-#define is_unary(op) (op->type == AST_NOT || op->type == AST_POS || op->type == AST_NEG || op->type == AST_DEREF)
-
-static int index_op(TokenDef *op)
-{
-    for (int i = 0; i < NR_OP; i++)
-        if (op_table[i].type == op->type)
-            return i;
-    return -1;
-}
+#define HEAD_OP logi_or
 
 bool is_double_punct(char *str)
 {
-    for (int i = 0; i < NR_OP; i++)
+    OperatorPrec *prec = &HEAD_OP;
+    while (prec != NULL)
     {
-        const char *op = op_table[i].str;
+        for (int i = 0; i < prec->n; i++)
+        {
+            const char *op = prec->list[i].str;
         if (op[1] != '\0' && strncmp(str, op, 2) == 0)
             return true;
+        }
+        prec = prec->next;
     }
     return false;
 }
@@ -252,37 +253,41 @@ static ASTNode *parse_number_reg_bracket(Token *tokens, Token **tokens_ptr)
     return node;
 }
 
-static ASTNode *parse_operator(Token *tokens, Token **tokens_ptr, TokenDef *op)
+static ASTNode *parse_operator(Token *tokens, Token **tokens_ptr, OperatorPrec *prec)
 {
+    Assert(prec != NULL, "Invalid Operator.");
     ASTNode *node;
-    TokenDef *next_op = &op_table[index_op(op) + 1];
-    if (is_unary(op)) // unary operators
+    if (prec == &unary) // unary operators
     {
+        for (int i = 0; i < prec->n; i++)
+        {
+            const Operator *op = &prec->list[i];
         if (token_equal(tokens, op->str))
         {
             // unary must locate behind the expression, so we parse the operator before entering the next level
-            node = new_AST_unary(op->type, parse_operator(tokens->next, &tokens, op), op->handler);
-            *tokens_ptr = tokens;
-            return node;
+                node = new_AST_unary(op->type, parse_operator(tokens->next, &tokens, prec), op->handler);
+                goto ret;
         }
-        if (index_op(op) == NR_OP - 1) // the last level
-        {
+        }
             node = parse_number_reg_bracket(tokens, &tokens);
         }
-        else
-        {
-            node = parse_operator(tokens, &tokens, next_op);
-        }
-    }
     else // binary operators
     {
         node = parse_operator(tokens, &tokens,
-                              next_op);      // parse until there is nothing of higher priority in the LHS;
-        while (token_equal(tokens, op->str)) // why use while? consider "(2 + 5) && 6 && 1"
+                              prec->next); // parse until there is nothing of higher priority in the LHS;
+    loop:
+        for (int i = 0; i < prec->n; i++)
         {
-            node = new_AST_binary(op->type, node, parse_operator(tokens->next, &tokens, next_op), op->handler);
+            const Operator *op = &prec->list[i];
+            if (token_equal(tokens, op->str))
+            {
+                node = new_AST_binary(op->type, node, parse_operator(tokens->next, &tokens, prec->next), op->handler);
+                goto loop;
         }
     }
+        goto ret;
+    }
+ret:
     *tokens_ptr = tokens;
     return node;
 }
@@ -290,7 +295,7 @@ static ASTNode *parse_operator(Token *tokens, Token **tokens_ptr, TokenDef *op)
 /* In-Order traversal */
 static ASTNode *parse_expr(Token *tokens, Token **tokens_ptr)
 {
-    ASTNode *node = parse_operator(tokens, &tokens, &op_table[0]);
+    ASTNode *node = parse_operator(tokens, &tokens, &HEAD_OP);
     *tokens_ptr = tokens;
     return node;
 }
