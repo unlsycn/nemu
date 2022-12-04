@@ -189,7 +189,7 @@ bool is_double_punct(char *str)
 
 static ASTNode *new_AST_node(ASTNodeType type)
 {
-    ASTNode *node = calloc(1, sizeof(ASTNode));
+    ASTNode *node = sdb_calloc(1, sizeof(ASTNode));
     node->type = type;
     node->left_child = NULL;
     node->right_child = NULL;
@@ -222,30 +222,41 @@ static ASTNode *new_AST_cmd(Token *cmd)
     return node;
 }
 
-static ASTNode *new_AST_subcmd(Token *subcmd)
+static ASTNode *proto_AST_subcmd(int len, char *str)
 {
     ASTNode *node = new_AST_node(AST_SUBCMD);
-    node->value.ch = calloc(1, sizeof(subcmd->length));
-    memcpy(node->value.ch, subcmd->loc, subcmd->length);
+    node->value.str =
+        sdb_calloc(1, len * sizeof(char)); // copy str to ensure the accessibility of the AST in the wp_pool
+    memcpy(node->value.str, str, len);
     node->handler = subcmd_handler;
     return node;
+}
+
+static ASTNode *new_AST_subcmd(Token *subcmd)
+{
+    return proto_AST_subcmd(subcmd->length, subcmd->loc);
 }
 
 static ASTNode *new_AST_reg(Token *reg)
 {
     ASTNode *node = new_AST_node(AST_REG);
-    node->value.ch = calloc(1, sizeof(reg->length - 1));
-    memcpy(node->value.ch, reg->loc + 1, reg->length - 1);
+    node->value.str = sdb_calloc(1, (reg->length - 1) * sizeof(char));
+    memcpy(node->value.str, reg->loc + 1, reg->length - 1);
     node->handler = reg_handler;
+    return node;
+}
+
+static ASTNode *proto_AST_number(int val)
+{
+    ASTNode *node = new_AST_node(AST_NUMBER);
+    node->value.i = val;
+    node->handler = number_handler;
     return node;
 }
 
 static ASTNode *new_AST_number(Token *number)
 {
-    ASTNode *node = new_AST_node(AST_NUMBER);
-    node->value.i = number->value;
-    node->handler = number_handler;
-    return node;
+    return proto_AST_number(number->value);
 }
 
 #pragma endregion
@@ -255,7 +266,6 @@ static ASTNode *new_AST_number(Token *number)
     if (!(cond))                                               \
     {                                                          \
         sdb_error(token->loc + offset, format, ##__VA_ARGS__); \
-        return NULL;                                           \
     }
 
 #define assert_type(token, tok_type, format, ...) sdb_assert(token, 1, token->type == tok_type, format, ##__VA_ARGS__)

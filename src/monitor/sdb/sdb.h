@@ -2,6 +2,7 @@
 #define __SDB_H__
 
 #include <common.h>
+#include <setjmp.h>
 
 // stmt -> cmd args
 // args -> subcmd
@@ -30,6 +31,8 @@
 
 void sdb_error(char *loc, char *format, ...);
 
+extern void *sdb_calloc(size_t __nmemb, size_t __size);
+
 typedef enum
 {
     TK_CMD,
@@ -42,6 +45,8 @@ typedef enum
 typedef struct Token Token;
 
 Token *tokenize(char *str);
+
+extern void free_tokens(Token *tokens);
 
 bool token_equal(Token *token, const char *str);
 
@@ -170,7 +175,7 @@ ASTValue number_handler(ASTNode *this);
 
 union ASTValue {
     word_t i;
-    char *ch;
+    char *str;
 };
 
 struct Cmd

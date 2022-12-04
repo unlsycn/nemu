@@ -3,11 +3,23 @@
 
 static Token *new_token(TokenType type, char *begin, char *end)
 {
-    Token *token = calloc(1, sizeof(Token));
+    Token *token = sdb_calloc(1, sizeof(Token));
     token->type = type;
     token->loc = begin;
     token->length = end - begin;
     return token;
+}
+
+extern void free_tokens(Token *tokens)
+{
+    if (tokens->type == TK_EOL)
+    {
+        free(tokens);
+        return;
+    }
+    free_tokens(tokens->next);
+    free(tokens);
+    return;
 }
 
 bool token_equal(Token *token, const char *str)
@@ -79,13 +91,11 @@ Token *tokenize(char *stmt)
             if (*stmt != '\0' && *stmt != ' ')
             {
                 sdb_error(stmt + 1, "Expected an space after commands.");
-                return head;
             }
             next_token(TK_CMD, beg, stmt);
             continue;
         }
         sdb_error(stmt, "Invalid Token.");
-        return head;
     }
     next_token(TK_EOL, stmt, stmt);
     return head->next;

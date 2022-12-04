@@ -1,4 +1,5 @@
 #include "sdb.h"
+#include "debug.h"
 #include <cpu/cpu.h>
 #include <isa.h>
 #include <readline/history.h>
@@ -8,20 +9,60 @@
 static int is_batch_mode = false;
 
 static char *stmt = NULL;
-static bool error_unhandled = false; // global error flag
 
-void init_wp_pool();
+static jmp_buf sdb_env;
 
-static void free_tokens(Token *tokens)
+typedef struct Memlog Memlog;
+
+struct Memlog
 {
-    if (tokens->type == TK_EOL)
-    {
+    void *ptr;
+    Memlog *next;
+};
 
-        free(tokens);
+static Memlog head_log;
+
+static Memlog *cur_ptr = &head_log;
+
+extern void *sdb_calloc(size_t __nmemb, size_t __size)
+{
+    cur_ptr->next = calloc(1, sizeof(Memlog));
+    Assert(cur_ptr->next != NULL, "Fail to allocate memory for a Memlog structure.");
+    cur_ptr = cur_ptr->next;
+    cur_ptr->ptr = calloc(__nmemb, __size);
+    Assert(cur_ptr->ptr != NULL, "Fail to allocate memory.");
+    return cur_ptr->ptr;
+}
+
+static void discard_memlog()
+{
+    if (head_log.next == NULL)
+        return;
+    Memlog *log = head_log.next;
+    while (log->ptr != NULL)
+    {
+        free(log->ptr);
+        if (log->next == NULL)
+            return;
+        log = log->next;
+    }
+}
+
+static void clear_memlog(Memlog *log)
+{
+    if (log == NULL)
+        return;
+    if (log->next == NULL)
+    {
+        free(log);
         return;
     }
-    free_tokens(tokens->next);
+    clear_memlog(log->next);
+    free(log);
+    return;
 }
+
+void init_wp_pool();
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char *rl_gets()
@@ -53,20 +94,13 @@ void sdb_error(char *loc, char *format, ...)
     vprintf(format, VA_ARGS);
     printf("\n");
     va_end(VA_ARGS);
-    error_unhandled = true;
+    longjmp(sdb_env, 1);
 }
 
 void sdb_set_batch_mode()
 {
     is_batch_mode = true;
 }
-
-#define check_error              \
-    if (error_unhandled)         \
-    {                            \
-        error_unhandled = false; \
-        continue;                \
-    }
 
 void sdb_mainloop()
 {
@@ -78,11 +112,17 @@ void sdb_mainloop()
 
     for (; (stmt = rl_gets()) != NULL;)
     {
+        if (setjmp(sdb_env))
+        {
+            discard_memlog();
+            continue;
+        }
+        cur_ptr = &head_log;
+        clear_memlog(head_log.next);
+
         Token *tokens = tokenize(stmt);
-        check_error;
 
         ASTNode *ast = parse(tokens);
-        check_error;
 
         free_tokens(tokens);
 
