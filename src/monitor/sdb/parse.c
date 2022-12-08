@@ -134,14 +134,16 @@ ASTValue reg_handler(ASTNode *this)
 {
     ASTValue val;
     bool *success = NULL;
-    val.i = isa_reg_str2val(this->value.ch, success);
-    Assert(success == 0, "Failed to get the value of reg %s", this->value.ch);
+    val.i = isa_reg_str2val(this->value.str, success);
+    Assert(success == 0, "Failed to get the value of reg %s.", this->value.str);
     ret_val;
 }
 ASTValue number_handler(ASTNode *this)
 {
     ret_val;
 }
+
+#pragma endregion
 
 static OperatorPrec unary = {5,
                              NULL,
@@ -164,8 +166,6 @@ static OperatorPrec bit_xor = {1, &bit_and, {{"^", AST_BIT_XOR, bit_xor_handler}
 static OperatorPrec bit_or = {1, &bit_xor, {{"|", AST_BIT_OR, bit_or_handler}}};
 static OperatorPrec logi_and = {1, &bit_or, {{"&&", AST_LOGI_AND, logi_and_handler}}};
 static OperatorPrec logi_or = {1, &logi_and, {{"||", AST_LOGI_OR, logi_or_handler}}};
-
-#pragma endregion
 
 #define HEAD_OP logi_or
 
@@ -367,9 +367,22 @@ static ASTNode *parse_cmd(Token *tokens, Token **tokens_ptr)
     {
         node = new_AST_cmd(tokens);
         tokens = tokens->next;
-        assert_type(tokens, TK_CMD, "Expected a subcommand.");
-        node->left_child = new_AST_subcmd(tokens);
-        last_args(tokens);
+        if (tokens->type == TK_EOL)
+        {
+            if (type == AST_CMD_HELP)
+            {
+                node->left_child = proto_AST_subcmd(3, "all");
+            }
+            else
+            {
+                sdb_error(tokens->loc + 1, "Expected a subcommand.");
+            }
+        }
+        else
+        {
+            node->left_child = new_AST_subcmd(tokens);
+            last_args(tokens);
+        }
     }
     else if (type >= AST_CMD_SI && type <= AST_CMD_D) // cmd expr
     {
@@ -379,10 +392,12 @@ static ASTNode *parse_cmd(Token *tokens, Token **tokens_ptr)
         {
             if (type == AST_CMD_SI)
             {
-                node->left_child = new_AST_node(AST_NUMBER);
-                node->left_child->value.i = 1;
+                node->left_child = proto_AST_number(1);
             }
-            sdb_error(tokens->loc + 1, "Expected an argument.");
+            else
+            {
+                sdb_error(tokens->loc + 1, "Expected an argument.");
+            }
         }
         else
         {
