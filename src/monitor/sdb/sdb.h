@@ -35,6 +35,13 @@ extern void *sdb_calloc(size_t __nmemb, size_t __size);
 
 typedef enum
 {
+    SDB_RUN,
+    SDB_QUIT,
+    SDB_WP,
+} SdbRet;
+
+typedef enum
+{
     TK_CMD,
     TK_NUM, // DEC | HEX
     TK_PUNCT,
@@ -130,6 +137,10 @@ typedef struct OperatorPrec OperatorPrec;
 
 typedef ASTValue (*Handler)(ASTNode *this);
 
+void delete_AST_node(ASTNode *node);
+
+extern void free_AST(ASTNode *node);
+
 ASTNodeType type_cmd(Token *token);
 
 Handler handler_cmd(Token *token);
@@ -212,5 +223,12 @@ struct ASTNode
 };
 
 ASTNode *parse(Token *tokens);
+
+extern int new_wp(ASTNode *node);
+void remedy_expr(Token *expr);
+
+extern void free_wp(int no);
+
+extern void print_wp();
 
 #endif

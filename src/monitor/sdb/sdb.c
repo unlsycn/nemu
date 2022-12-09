@@ -90,7 +90,10 @@ void sdb_error(char *loc, char *format, ...)
 {
     va_list VA_ARGS;
     va_start(VA_ARGS, format);
-    printf("Error: %*s", (int)(loc - stmt), "^");
+    if (loc)
+        printf("Error: %*s", (int)(loc - stmt), "^");
+    else
+        printf("Error: ");
     vprintf(format, VA_ARGS);
     printf("\n");
     va_end(VA_ARGS);
@@ -124,9 +127,20 @@ void sdb_mainloop()
 
         ASTNode *ast = parse(tokens);
 
+        ASTValue ret = (ast->handler(ast));
+
+        if (ret.i == SDB_WP)
+        {
+            remedy_expr(tokens->next);
+            delete_AST_node(ast);
+        }
+        else
+        {
+            free_AST(ast);
+        }
         free_tokens(tokens);
 
-        if ((ast->handler(ast)).i > 0)
+        if (ret.i == SDB_QUIT)
             return;
 
 #ifdef CONFIG_DEVICE

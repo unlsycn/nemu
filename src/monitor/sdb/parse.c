@@ -133,10 +133,10 @@ ASTValue deref_handler(ASTNode *this)
 ASTValue reg_handler(ASTNode *this)
 {
     ASTValue val;
-    bool *success = NULL;
-    val.i = isa_reg_str2val(this->value.str, success);
-    Assert(success == 0, "Failed to get the value of reg %s.", this->value.str);
-    ret_val;
+    bool success = false;
+    val.i = isa_reg_str2val(this->value.str, &success);
+    Assert(success, "Failed to get the value of reg %s.", this->value.str);
+    return val;
 }
 ASTValue number_handler(ASTNode *this)
 {
@@ -187,6 +187,22 @@ bool is_double_punct(char *str)
 
 #pragma region AST_node
 
+extern void delete_AST_node(ASTNode *node)
+{
+    if (node->type == AST_SUBCMD || node->type == AST_REG)
+        free(node->value.str);
+    free(node);
+}
+
+extern void free_AST(ASTNode *node)
+{
+    if (node->left_child)
+        free(node->left_child);
+    if (node->right_child)
+        free(node->right_child);
+    delete_AST_node(node);
+}
+
 static ASTNode *new_AST_node(ASTNodeType type)
 {
     ASTNode *node = sdb_calloc(1, sizeof(ASTNode));
@@ -218,7 +234,7 @@ static ASTNode *new_AST_cmd(Token *cmd)
 {
     ASTNode *node = new_AST_node(type_cmd(cmd));
     node->handler = handler_cmd(cmd);
-    node->value.i = 0;
+    node->value.i = SDB_RUN;
     return node;
 }
 

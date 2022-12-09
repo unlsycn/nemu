@@ -50,7 +50,7 @@ ASTValue cmd_c(ASTNode *this)
 ASTValue cmd_q(ASTNode *this)
 {
     nemu_state.state = NEMU_QUIT;
-    this->value.i = 1;
+    this->value.i = SDB_QUIT;
     ret_val;
 }
 
@@ -88,6 +88,7 @@ ASTValue cmd_info(ASTNode *this)
     }
     else if (strcmp(subcmd, "w") == 0)
     {
+        print_wp();
     }
     ret_val;
 }
@@ -107,11 +108,16 @@ ASTValue cmd_p(ASTNode *this)
 
 ASTValue cmd_w(ASTNode *this)
 {
+    printf("Watchpoint created: Watchpoint %d.\n", new_wp(this->left_child));
+    this->value.i = SDB_WP;
     ret_val;
 }
 
 ASTValue cmd_d(ASTNode *this)
 {
+    int no = ARG_1.i;
+    free_wp(no);
+    printf("Watchpoint %d removed.\n", no);
     ret_val;
 }
 
