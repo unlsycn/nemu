@@ -262,7 +262,7 @@ static ASTNode *new_AST_reg(Token *reg)
     return node;
 }
 
-static ASTNode *proto_AST_number(int val)
+static ASTNode *proto_AST_number(word_t val)
 {
     ASTNode *node = new_AST_node(AST_NUMBER);
     node->value.i = val;

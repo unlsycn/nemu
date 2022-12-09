@@ -7,14 +7,22 @@ const char *regs[] = {"zero", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", 
 
 void isa_reg_display()
 {
+    int len = 20;
+    printf("Reg    Value\n");
+    printf("[pc]   0x%-*lX\n", len, cpu.pc);
     for (int i = 0; i < 32; i++)
     {
-        printf("%4s %20lu\n", regs[i], gpr(i));
+        printf("%-4s   %-*lu\n", regs[i], len, gpr(i));
     }
 }
 
 word_t isa_reg_str2val(const char *s, bool *success)
 {
+    if (strcmp(s, "pc") == 0)
+    {
+        *success = true;
+        return cpu.pc;
+    }
     for (int i = 0; i < 32; i++)
     {
         if (strcmp(s, regs[i]) == 0)
