@@ -135,7 +135,7 @@ ASTValue reg_handler(ASTNode *this)
     ASTValue val;
     bool success = false;
     val.i = isa_reg_str2val(this->value.str, &success);
-    Assert(success, "Failed to get the value of reg %s.", this->value.str);
+    sdb_assert(success, NULL, "Reg %s does not exist.", this->value.str);
     return val;
 }
 ASTValue number_handler(ASTNode *this)
@@ -277,16 +277,10 @@ static ASTNode *new_AST_number(Token *number)
 
 #pragma endregion
 
-/* interrupt current statement if assert fails */
-#define sdb_assert(token, offset, cond, format, ...)           \
-    if (!(cond))                                               \
-    {                                                          \
-        sdb_error(token->loc + offset, format, ##__VA_ARGS__); \
-    }
+#define assert_type(token, tok_type, format, ...) \
+    sdb_assert(token->type == tok_type, token->loc + 1, format, ##__VA_ARGS__)
 
-#define assert_type(token, tok_type, format, ...) sdb_assert(token, 1, token->type == tok_type, format, ##__VA_ARGS__)
-
-#define assert_str(token, str, format, ...) sdb_assert(token, 1, token_equal(token, str), format, ##__VA_ARGS__)
+#define assert_str(token, str, format, ...) sdb_assert(token_equal(token, str), token->loc + 1, format, ##__VA_ARGS__)
 
 /* check if currect token is the last one */
 #define last_args(token) \
@@ -373,7 +367,7 @@ static ASTNode *parse_cmd(Token *tokens, Token **tokens_ptr)
     assert_type(tokens, TK_CMD, "Expected a command.");
     ASTNode *node;
     ASTNodeType type = type_cmd(tokens);
-    sdb_assert(tokens, 0, type != NON, "Command not found.");
+    sdb_assert(type != NON, tokens->loc, "Command not found.");
     if (type >= AST_CMD_C && type <= AST_CMD_Q) // cmd
     {
         node = new_AST_cmd(tokens);

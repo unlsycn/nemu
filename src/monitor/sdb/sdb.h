@@ -31,9 +31,16 @@
 
 /* sdb */
 
+extern void *sdb_calloc(size_t __nmemb, size_t __size);
+
 void sdb_error(char *loc, char *format, ...);
 
-extern void *sdb_calloc(size_t __nmemb, size_t __size);
+/* interrupt current statement if assert fails */
+#define sdb_assert(cond, loc, format, ...)     \
+    if (!(cond))                               \
+    {                                          \
+        sdb_error(loc, format, ##__VA_ARGS__); \
+    }
 
 typedef enum
 {
