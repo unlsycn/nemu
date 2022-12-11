@@ -29,6 +29,8 @@
 //       | *
 // reg  -> $reg_name
 
+/* sdb */
+
 void sdb_error(char *loc, char *format, ...);
 
 extern void *sdb_calloc(size_t __nmemb, size_t __size);
@@ -40,6 +42,8 @@ typedef enum
     SDB_WP,
 } SdbRet;
 
+/* tokenizer */
+
 typedef enum
 {
     TK_CMD,
@@ -50,13 +54,6 @@ typedef enum
 } TokenType;
 
 typedef struct Token Token;
-
-Token *tokenize(char *str);
-
-extern void free_tokens(Token *tokens);
-
-bool token_equal(Token *token, const char *str);
-
 struct Token
 {
     TokenType type;
@@ -65,6 +62,14 @@ struct Token
     char *loc;
     int length;
 };
+
+extern void free_tokens(Token *tokens);
+
+extern bool token_equal(Token *token, const char *str);
+
+Token *tokenize(char *str);
+
+/* parser */
 
 typedef enum
 {
@@ -126,92 +131,14 @@ typedef enum
 } ASTNodeType;
 
 typedef union ASTValue ASTValue;
-
-typedef struct ASTNode ASTNode;
-
-typedef struct Cmd Cmd;
-
-typedef struct Operator Operator;
-
-typedef struct OperatorPrec OperatorPrec;
-
-typedef ASTValue (*Handler)(ASTNode *this);
-
-void delete_AST_node(ASTNode *node);
-
-extern void free_AST(ASTNode *node);
-
-ASTNodeType type_cmd(Token *token);
-
-Handler handler_cmd(Token *token);
-
-ASTValue cmd_c(ASTNode *this);
-ASTValue cmd_q(ASTNode *this);
-ASTValue cmd_help(ASTNode *this);
-ASTValue cmd_info(ASTNode *this);
-ASTValue cmd_si(ASTNode *this);
-ASTValue cmd_p(ASTNode *this);
-ASTValue cmd_w(ASTNode *this);
-ASTValue cmd_d(ASTNode *this);
-ASTValue cmd_x(ASTNode *this);
-
-ASTValue subcmd_handler(ASTNode *this);
-ASTValue logi_or_handler(ASTNode *this);
-ASTValue logi_and_handler(ASTNode *this);
-ASTValue bit_or_handler(ASTNode *this);
-ASTValue bit_xor_handler(ASTNode *this);
-ASTValue bit_and_handler(ASTNode *this);
-ASTValue eq_handler(ASTNode *this);
-ASTValue neq_handler(ASTNode *this);
-ASTValue le_handler(ASTNode *this);
-ASTValue lt_handler(ASTNode *this);
-ASTValue ge_handler(ASTNode *this);
-ASTValue gt_handler(ASTNode *this);
-ASTValue ls_handler(ASTNode *this);
-ASTValue rs_handler(ASTNode *this);
-ASTValue add_handler(ASTNode *this);
-ASTValue sub_handler(ASTNode *this);
-ASTValue mul_handler(ASTNode *this);
-ASTValue div_handler(ASTNode *this);
-ASTValue mod_handler(ASTNode *this);
-ASTValue logi_not_handler(ASTNode *this);
-ASTValue bit_not_handler(ASTNode *this);
-ASTValue pos_handler(ASTNode *this);
-ASTValue neg_handler(ASTNode *this);
-ASTValue deref_handler(ASTNode *this);
-ASTValue reg_handler(ASTNode *this);
-ASTValue number_handler(ASTNode *this);
-
-#define ret_val return this->value;
-
 union ASTValue {
     word_t i;
     char *str;
 };
 
-struct Cmd
-{
-    const char *name;
-    const char *description;
-    const ASTNodeType type;
-    Handler handler;
-};
+typedef struct ASTNode ASTNode;
 
-struct Operator
-{
-    const char *str;
-    const ASTNodeType type;
-    Handler handler;
-};
-
-struct OperatorPrec
-{
-    const int n;
-    OperatorPrec *next;
-    const Operator list[];
-};
-
-bool is_double_punct(char *str);
+typedef ASTValue (*Handler)(ASTNode *this);
 
 struct ASTNode
 {
@@ -222,7 +149,48 @@ struct ASTNode
     Handler handler;
 };
 
+typedef struct Operator Operator;
+struct Operator
+{
+    const char *str;
+    const ASTNodeType type;
+    Handler handler;
+};
+
+typedef struct OperatorPrec OperatorPrec;
+struct OperatorPrec
+{
+    const int n;
+    OperatorPrec *next;
+    const Operator list[];
+};
+
+bool is_double_punct(char *str);
+
+#define ret_val return this->value;
+
+void delete_AST_node(ASTNode *node);
+
+extern void free_AST(ASTNode *node);
+
 ASTNode *parse(Token *tokens);
+
+/* command */
+
+typedef struct Cmd Cmd;
+struct Cmd
+{
+    const char *name;
+    const char *description;
+    const ASTNodeType type;
+    Handler handler;
+};
+
+ASTNodeType type_cmd(Token *token);
+
+Handler handler_cmd(Token *token);
+
+/* watchpoint */
 
 extern int new_wp(ASTNode *node);
 void remedy_expr(Token *expr);

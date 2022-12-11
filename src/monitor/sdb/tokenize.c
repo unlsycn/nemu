@@ -22,7 +22,7 @@ extern void free_tokens(Token *tokens)
     return;
 }
 
-bool token_equal(Token *token, const char *str)
+extern bool token_equal(Token *token, const char *str)
 {
     return strncmp(token->loc, str, token->length) == 0 && str[token->length] == '\0';
 }
