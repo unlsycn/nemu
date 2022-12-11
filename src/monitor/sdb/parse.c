@@ -2,135 +2,53 @@
 #include <isa.h>
 #include <memory/vaddr.h>
 
-#define LHS this->left_child->handler(this->left_child).i
-#define RHS this->right_child->handler(this->right_child).i
+#pragma region operators
 
-#pragma region handlers
+#define LHS (this->left_child->handler(this->left_child).i)
+#define RHS (this->right_child->handler(this->right_child).i)
+#define I (this->value.i)
+#define STR (this->value.str)
 
-ASTValue subcmd_handler(ASTNode *this)
+#define HANDLER_PAT(op) ASTValue op##_handler(ASTNode *this)
+#define BINARY_PAT(op)          \
+    HANDLER_PAT(op)             \
+    {                           \
+        I = LHS SYMBOL(op) RHS; \
+        ret_val;                \
+    }
+#define UNARY_PAT(op)       \
+    HANDLER_PAT(op)         \
+    {                       \
+        I = SYMBOL(op) LHS; \
+        ret_val;            \
+    }
+
+HANDLER_PAT(subcmd)
 {
     ret_val;
 }
-ASTValue logi_or_handler(ASTNode *this)
-{
-    this->value.i = LHS || RHS;
-    ret_val;
-}
-ASTValue logi_and_handler(ASTNode *this)
-{
-    this->value.i = LHS && RHS;
-    ret_val;
-}
-ASTValue bit_or_handler(ASTNode *this)
-{
-    this->value.i = LHS | RHS;
-    ret_val;
-}
-ASTValue bit_xor_handler(ASTNode *this)
-{
-    this->value.i = LHS ^ RHS;
-    ret_val;
-}
-ASTValue bit_and_handler(ASTNode *this)
-{
-    this->value.i = LHS & RHS;
-    ret_val;
-}
-ASTValue eq_handler(ASTNode *this)
-{
-    this->value.i = LHS == RHS;
-    ret_val;
-}
-ASTValue neq_handler(ASTNode *this)
-{
-    this->value.i = LHS != RHS;
-    ret_val;
-}
-ASTValue le_handler(ASTNode *this)
-{
-    this->value.i = LHS <= RHS;
-    ret_val;
-}
-ASTValue lt_handler(ASTNode *this)
-{
-    this->value.i = LHS < RHS;
-    ret_val;
-}
-ASTValue ge_handler(ASTNode *this)
-{
-    this->value.i = LHS >= RHS;
-    ret_val;
-}
-ASTValue gt_handler(ASTNode *this)
-{
-    this->value.i = LHS > RHS;
-    ret_val;
-}
-ASTValue ls_handler(ASTNode *this)
-{
-    this->value.i = LHS << RHS;
-    ret_val;
-}
-ASTValue rs_handler(ASTNode *this)
-{
-    this->value.i = LHS >> RHS;
-    ret_val;
-}
-ASTValue add_handler(ASTNode *this)
-{
-    this->value.i = LHS + RHS;
-    ret_val;
-}
-ASTValue sub_handler(ASTNode *this)
-{
-    this->value.i = LHS - RHS;
-    ret_val;
-}
-ASTValue mul_handler(ASTNode *this)
-{
-    this->value.i = LHS * RHS;
-    ret_val;
-}
-ASTValue div_handler(ASTNode *this)
+MAP(BINARY_PAT, LOGI_OR, LOGI_AND, BIT_OR, BIT_XOR, BIT_AND, EQ, NEQ, LE, LT, GE, GT, LS, RS, ADD, SUB, MUL);
+HANDLER_PAT(DIV)
 {
     word_t rhs = RHS;
     Assert(rhs != 0, "Division by zero is illegal.");
-    this->value.i = LHS / rhs;
+    I = LHS / rhs;
     ret_val;
 }
-ASTValue mod_handler(ASTNode *this)
+HANDLER_PAT(MOD)
 {
     word_t rhs = RHS;
     Assert(rhs != 0, "Remainder by zero is illegal.");
-    this->value.i = LHS % rhs;
+    I = LHS % rhs;
     ret_val;
 }
-ASTValue logi_not_handler(ASTNode *this)
+MAP(UNARY_PAT, LOGI_NOT, BIT_NOT, POS, NEG);
+HANDLER_PAT(DEREF)
 {
-    this->value.i = !LHS;
+    I = vaddr_read(LHS, 1);
     ret_val;
 }
-ASTValue bit_not_handler(ASTNode *this)
-{
-    this->value.i = ~LHS;
-    ret_val;
-}
-ASTValue pos_handler(ASTNode *this)
-{
-    this->value.i = LHS;
-    ret_val;
-}
-ASTValue neg_handler(ASTNode *this)
-{
-    this->value.i = -LHS;
-    ret_val;
-}
-ASTValue deref_handler(ASTNode *this)
-{
-    this->value.i = vaddr_read(LHS, 1);
-    ret_val;
-}
-ASTValue reg_handler(ASTNode *this)
+HANDLER_PAT(reg)
 {
     ASTValue val;
     bool success = false;
@@ -138,34 +56,35 @@ ASTValue reg_handler(ASTNode *this)
     sdb_assert(success, NULL, "Reg %s does not exist.", this->value.str);
     return val;
 }
-ASTValue number_handler(ASTNode *this)
+HANDLER_PAT(number)
 {
     ret_val;
 }
 
-#pragma endregion
+#define OP(op)                                  \
+    {                                           \
+        str(SYMBOL(op)), AST_##op, op##_handler \
+    }
 
-static OperatorPrec unary = {5,
-                             NULL,
-                             {{"!", AST_LOGI_NOT, logi_not_handler},
-                              {"~", AST_BIT_NOT, bit_not_handler},
-                              {"+", AST_POS, pos_handler},
-                              {"-", AST_NEG, neg_handler},
-                              {"*", AST_DEREF, deref_handler}}};
-static OperatorPrec mul_div_mod = {
-    3, &unary, {{"*", AST_MUL, mul_handler}, {"/", AST_DIV, div_handler}, {"%", AST_MOD, mod_handler}}};
-static OperatorPrec add_sub = {2, &mul_div_mod, {{"+", AST_ADD, add_handler}, {"-", AST_SUB, sub_handler}}};
-static OperatorPrec shift = {2, &add_sub, {{"<<", AST_LS, ls_handler}, {">>", AST_RS, rs_handler}}};
-static OperatorPrec relation = {
-    4,
-    &shift,
-    {{"<=", AST_LE, le_handler}, {"<", AST_LT, lt_handler}, {">=", AST_GE, ge_handler}, {">", AST_GT, gt_handler}}};
-static OperatorPrec eq = {2, &relation, {{"==", AST_EQ, eq_handler}, {"!=", AST_NEQ, neq_handler}}};
-static OperatorPrec bit_and = {1, &eq, {{"&", AST_BIT_AND, bit_and_handler}}};
-static OperatorPrec bit_xor = {1, &bit_and, {{"^", AST_BIT_XOR, bit_xor_handler}}};
-static OperatorPrec bit_or = {1, &bit_xor, {{"|", AST_BIT_OR, bit_or_handler}}};
-static OperatorPrec logi_and = {1, &bit_or, {{"&&", AST_LOGI_AND, logi_and_handler}}};
-static OperatorPrec logi_or = {1, &logi_and, {{"||", AST_LOGI_OR, logi_or_handler}}};
+// declare operator precedence from high to low
+static OperatorPrec unary = {5, NULL, {OP(LOGI_NOT), OP(BIT_NOT), OP(POS), OP(NEG), OP(DEREF)}};
+static OperatorPrec mul_div_mod = {3, &unary, {OP(MUL), OP(DIV), OP(MOD)}};
+static OperatorPrec add_sub = {2, &mul_div_mod, {OP(ADD), OP(SUB)}};
+static OperatorPrec shift = {2, &add_sub, {OP(LS), OP(RS)}};
+static OperatorPrec relation = {4, &shift, {OP(LE), OP(LT), OP(GE), OP(GT)}};
+static OperatorPrec eq = {2, &relation, {OP(EQ), OP(NEQ)}};
+static OperatorPrec bit_and = {1, &eq, {OP(BIT_AND)}};
+static OperatorPrec bit_xor = {1, &bit_and, {OP(BIT_XOR)}};
+static OperatorPrec bit_or = {1, &bit_xor, {OP(BIT_OR)}};
+static OperatorPrec logi_and = {1, &bit_or, {OP(LOGI_AND)}};
+static OperatorPrec logi_or = {1, &logi_and, {OP(LOGI_OR)}};
+
+#undef OP
+#undef LHS
+#undef RHS
+#undef I
+#undef STR
+#pragma endregion
 
 #define HEAD_OP logi_or
 

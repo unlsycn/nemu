@@ -96,46 +96,58 @@ typedef enum
     AST_CMD_X,
     // subcmd
     AST_SUBCMD,
-    // ||
+#define SYM_LOGI_OR ||
     AST_LOGI_OR,
-    // &&
+#define SYM_LOGI_AND &&
     AST_LOGI_AND,
-    // |
+#define SYM_BIT_OR |
     AST_BIT_OR,
-    // ^
+#define SYM_BIT_XOR ^
     AST_BIT_XOR,
-    // &
+#define SYM_BIT_AND &
     AST_BIT_AND,
-    // == !=
+#define SYM_EQ ==
     AST_EQ,
+#define SYM_NEQ !=
     AST_NEQ,
-    // <= < >= >
+#define SYM_LE <=
     AST_LE,
+#define SYM_LT <
     AST_LT,
+#define SYM_GE >=
     AST_GE,
+#define SYM_GT >
     AST_GT,
-    // << >>
+#define SYM_LS <<
     AST_LS,
+#define SYM_RS >>
     AST_RS,
-    // binary + =
+#define SYM_ADD +
     AST_ADD,
+#define SYM_SUB -
     AST_SUB,
-    // * / %
+#define SYM_MUL *
     AST_MUL,
+#define SYM_DIV /
     AST_DIV,
+#define SYM_MOD %
     AST_MOD,
-    // ! ~
+#define SYM_LOGI_NOT !
     AST_LOGI_NOT,
+#define SYM_BIT_NOT ~
     AST_BIT_NOT,
-    // unary + -
+#define SYM_POS +
     AST_POS,
+#define SYM_NEG -
     AST_NEG,
-    // deref *
+#define SYM_DEREF *
     AST_DEREF,
     // number reg
     AST_NUMBER,
     AST_REG
 } ASTNodeType;
+
+#define SYMBOL(symbol) SYM_##symbol
 
 typedef union ASTValue ASTValue;
 union ASTValue {
