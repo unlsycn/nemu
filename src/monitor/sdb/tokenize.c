@@ -50,7 +50,7 @@ Token *tokenize(char *stmt)
             word_t val = strtoul(stmt, &stmt, 10); // DEC
             if (val == 0)
             {
-                if (*stmt == 'x') // HEX
+                if (*stmt == 'x' || *stmt == 'X') // HEX
                 {
                     stmt++;
                     val = strtoul(stmt, &stmt, 16);
