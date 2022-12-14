@@ -33,8 +33,8 @@ extern bool token_equal(Token *token, const char *str)
 
 Token *tokenize(char *stmt)
 {
-    Token *head = new_token(TK_EOL, stmt, stmt);
-    Token *cur = head;
+    Token head = {};
+    Token *cur = &head;
     while (*stmt)
     {
         if (isspace(*stmt))
@@ -98,5 +98,5 @@ Token *tokenize(char *stmt)
         sdb_error(stmt, "Invalid Token.");
     }
     next_token(TK_EOL, stmt, stmt);
-    return head->next;
+    return head.next;
 }

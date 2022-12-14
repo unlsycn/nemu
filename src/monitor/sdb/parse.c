@@ -116,9 +116,9 @@ extern void delete_AST_node(ASTNode *node)
 extern void free_AST(ASTNode *node)
 {
     if (node->left_child)
-        free(node->left_child);
+        free_AST(node->left_child);
     if (node->right_child)
-        free(node->right_child);
+        free_AST(node->right_child);
     delete_AST_node(node);
 }
 

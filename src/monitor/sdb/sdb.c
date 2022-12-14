@@ -58,6 +58,7 @@ static void clear_memlog(Memlog *log)
         return;
     }
     clear_memlog(log->next);
+    log->next = NULL;
     free(log);
     return;
 }
