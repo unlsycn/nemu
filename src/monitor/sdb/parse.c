@@ -161,8 +161,9 @@ static ASTNode *proto_AST_subcmd(int len, char *str)
 {
     ASTNode *node = new_AST_node(AST_SUBCMD);
     node->value.str =
-        sdb_calloc(1, len * sizeof(char)); // copy str to ensure the accessibility of the AST in the wp_pool
+        sdb_calloc(1, (len + 1) * sizeof(char)); // copy str to ensure the accessibility of the AST in the wp_pool
     memcpy(node->value.str, str, len);
+    *(node->value.str + len) = '\0';
     node->handler = subcmd_handler;
     return node;
 }
@@ -175,8 +176,12 @@ static ASTNode *new_AST_subcmd(Token *subcmd)
 static ASTNode *new_AST_reg(Token *reg)
 {
     ASTNode *node = new_AST_node(AST_REG);
-    node->value.str = sdb_calloc(1, (reg->length - 1) * sizeof(char));
+    node->value.str = sdb_calloc(1, (reg->length) * sizeof(char));
     memcpy(node->value.str, reg->loc + 1, reg->length - 1);
+    *(node->value.str + reg->length - 1) = '\0';
+    // make value.str null-terminated
+    // reg->loc : '$' 't' '0' ...
+    // node->value.str : 't' '0' '\0'
     node->handler = reg_handler;
     return node;
 }
