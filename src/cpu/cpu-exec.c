@@ -1,3 +1,4 @@
+#include "utils.h"
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
@@ -31,7 +32,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc)
         IFDEF(CONFIG_ITRACE, puts(_this->logbuf));
     }
 #ifdef CONFIG_WATCHPOINT
-    if (traval_wp())
+    if (nemu_state.state == NEMU_RUNNING && traval_wp())
     {
         nemu_state.state = NEMU_STOP;
     }
