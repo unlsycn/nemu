@@ -7,12 +7,11 @@ const char *regs[] = {"zero", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", 
 
 void isa_reg_display()
 {
-    int len = 20;
-    printf("Reg    Value\n");
-    printf("[pc]   0x%-*lX\n", len, cpu.pc);
+    printf("Reg    %-18s  %-20s\n", "Hex", "Dec");
+    printf("[pc]   " FMT_WORD "\n", cpu.pc);
     for (int i = 0; i < 32; i++)
     {
-        printf("%-4s   %-*lu\n", regs[i], len, gpr(i));
+        printf("%-4s   " FMT_WORD_LH "  " FMT_WORD_LD "\n", regs[i], gpr(i), gpr(i));
     }
 }
 

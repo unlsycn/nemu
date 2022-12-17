@@ -94,6 +94,7 @@ extern bool traval_wp()
         {
             ret = true;
             printf("Watchpoint %d hit.\n", cur->NO);
+            printf("%s= " FMT_WORD_LH "\n", cur->expr, cur_value.i);
         }
         cur->last_value = cur_value;
     }

@@ -45,7 +45,7 @@ ASTValue cmd_si(ASTNode *this)
 
 ASTValue cmd_p(ASTNode *this)
 {
-    printf("%lu\n", ARG_1.i);
+    printf(FMT_WORD_LD "\n", ARG_1.i);
     ret_val;
 }
 
