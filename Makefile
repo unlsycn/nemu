@@ -1,3 +1,6 @@
+MAKEFLAGS += -j $(JOBS) -l $(JOBS)
+JOBS ?= $(shell nproc)
+
 # Sanity check
 ifeq ($(wildcard $(NEMU_HOME)/src/nemu-main.c),)
   $(error NEMU_HOME=$(NEMU_HOME) is not a NEMU repo)
