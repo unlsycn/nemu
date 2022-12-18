@@ -1,5 +1,6 @@
 -include $(NEMU_HOME)/../Makefile
 include $(NEMU_HOME)/scripts/build.mk
+include $(NEMU_HOME)/scripts/vscode.mk
 
 include $(NEMU_HOME)/tools/difftest.mk
 
@@ -30,10 +31,6 @@ lldb: run-env
 	$(call git_commit, "lldb NEMU")
 	lldb $(BINARY) -- $(ARGS) $(IMG)
 
-vscode-debug: run-env
-	$(call git_commit, "debug NEMU in VSCode")
-	@eval echo "BINARY=$(BINARY)\\\nARGS=$(ARGS) $(IMG)" > $(NEMU_HOME)/build/vscode-gdb-args
-	
 clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))
 $(clean-tools):
 	-@$(MAKE) -s -C $@ clean
