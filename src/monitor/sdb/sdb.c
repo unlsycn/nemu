@@ -110,7 +110,11 @@ void sdb_mainloop()
 {
     if (is_batch_mode)
     {
-        //        cmd_c(NULL);
+        ASTValue cmd_c(ASTNode * this);
+        cmd_c(({
+            static ASTNode __t = {.value = {SDB_QUIT}};
+            &__t;
+        }));
         return;
     }
 
