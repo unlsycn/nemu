@@ -17,19 +17,27 @@ __attribute__((always_inline)) static inline void pattern_decode(const char *str
                                                                  uint64_t *mask, uint64_t *shift)
 {
     uint64_t __key = 0, __mask = 0, __shift = 0;
-#define macro(i)                                                                                     \
-    if ((i) >= len)                                                                                  \
-        goto finish;                                                                                 \
-    else                                                                                             \
-    {                                                                                                \
-        char c = str[i];                                                                             \
-        if (c != ' ')                                                                                \
-        {                                                                                            \
-            Assert(c == '0' || c == '1' || c == '?', "invalid character '%c' in pattern string", c); \
-            __key = (__key << 1) | (c == '1' ? 1 : 0);                                               \
-            __mask = (__mask << 1) | (c == '?' ? 0 : 1);                                             \
-            __shift = (c == '?' ? __shift + 1 : 0);                                                  \
-        }                                                                                            \
+    /* bitwise check instrucution pattern e.g.
+     *  sd          ??????? ????? ????? 011 ????? 01000 11
+     *  key=0x3023  0000000 00000 00000 011 00000 01000 11
+     *  mask=0x707f 0000000 00000 00000 111 00000 11111 11
+     *  shift=0
+     */
+#define macro(i)                                                                                               \
+    if ((i) >= len)                                                                                            \
+        goto finish;                                                                                           \
+    else                                                                                                       \
+    {                                                                                                          \
+        char c = str[i];                                                                                       \
+        if (c != ' ')                                                                                          \
+        {                                                                                                      \
+            Assert(c == '0' || c == '1' || c == '?', "invalid character '%c' in pattern string", c);           \
+            __key = (__key << 1) | (c == '1' ? 1 : 0);                                                         \
+            __mask = (__mask << 1) | (c == '?' ? 0 : 1);                                                       \
+            __shift = (c == '?' ? __shift + 1 : 0);                                                            \
+            /* shift is the number of bits that the opcode is from the least significant bit, i.e., the number \
+             * of consecutive '?' which appear at the end of the pattern */                                    \
+        }                                                                                                      \
     }
 
 #define macro2(i) \
@@ -94,7 +102,7 @@ finish:
     {                                                                  \
         uint64_t key, mask, shift;                                     \
         pattern_decode(pattern, STRLEN(pattern), &key, &mask, &shift); \
-        if (((INSTPAT_INST(s) >> shift) & mask) == key)                \
+        if ((((uint64_t)INSTPAT_INST(s) >> shift) & mask) == key)      \
         {                                                              \
             INSTPAT_MATCH(s, ##__VA_ARGS__);                           \
             goto *(__instpat_end);                                     \
@@ -104,6 +112,7 @@ finish:
 #define INSTPAT_START(name) \
     {                       \
         const void **__instpat_end = &&concat(__instpat_end_, name);
+// __instpat_end is the address of the label __instpad_end_{name}, which can be jumped to using goto
 #define INSTPAT_END(name)           \
     concat(__instpat_end_, name) :; \
     }
