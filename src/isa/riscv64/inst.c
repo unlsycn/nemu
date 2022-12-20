@@ -103,12 +103,35 @@ static int decode_exec(Decode *s)
         __VA_ARGS__;                                                       \
     }
 
+#ifdef __PORTABLE__
+#define _SIGN(_src, _len) SEXT(BITS(_src, _len - 1, _len - 1), 1)
+#define _BITS(_src, _len) (_len >= 64 ? _src : BITS(_src, _len - 1, 0)) // BITS(x, 63, 0) is UB
+#define SRA(_a, _b, _len) (_BITS((_SIGN(_a, _len) ^ _a), _len) >> _b ^ _SIGN(_a, _len))
+#define _RS(_x) SRA(_x, 32, 64)
+#define u_RS(_x) (_x >> 32)
+#define _MULH(_ua, _ub, _a, _b)                                  \
+    ({                                                           \
+        _ua##int64_t a = _a;                                     \
+        _ub##int64_t b = _b;                                     \
+        int64_t a_lo = (uint32_t)a;                              \
+        int64_t b_lo = (uint32_t)b;                              \
+        int64_t a_hi = _ua##_RS(a);                              \
+        int64_t b_hi = _ub##_RS(b);                              \
+        int64_t mid_1 = a_hi * b_lo + (a_lo * b_lo >> 32);       \
+        int64_t mid_2 = a_lo * b_hi + (uint32_t)mid_1;           \
+        (uint64_t)(a_hi * b_hi + (mid_1 >> 32) + (mid_2 >> 32)); \
+    })
+#endif
+#ifndef __PORTABLE__
+#define SRA(_a, _b, _len) ((int##_len##_t)_a >> _b)
+#define _MULH(_ua, _ub, _a, _b) (uint64_t)(((__int128)(_ua##int64_t)_a * (_ub##int64_t)_b) >> 64)
+#endif
 #define JMP() s->dnpc = s->pc + imm * 2;
 #define GES(_a, _b) ((int64_t)_a >= (int64_t)_b)
 #define LTS(_a, _b) ((int64_t)_a < (int64_t)_b)
-#define _SIGN(_src, _len) SEXT(BITS(_src, _len - 1, _len - 1), 1)
-#define _BITS(_src, _len) (_len >= 64 ? _src : BITS(_src, _len - 1, 0))                 // BITS(x, 63, 0) is UB
-#define SRA(_a, _b, _len) (_BITS((_SIGN(_a, _len) ^ _a), _len) >> _b ^ _SIGN(_a, _len)) // a portable SRA
+#define MULH(_a, _b) _MULH(, , _a, _b)
+#define MULHSU(_a, _b) _MULH(, u, _a, _b)
+#define MULHU(_a, _b) _MULH(u, u, _a, _b)
 
     INSTPAT_START();
     INSTPAT("0000000 ????? ????? 000 ????? 01100 11", add, R, R(dest) = src1 + src2);
@@ -135,6 +158,9 @@ static int decode_exec(Decode *s)
     INSTPAT("??????? ????? ????? 010 ????? 00000 11", lw, I, R(dest) = SEXT(Mr(src1 + imm, 4), 32));
     INSTPAT("??????? ????? ????? 110 ????? 00000 11", lwu, I, R(dest) = Mr(src1 + imm, 4));
     INSTPAT("0000001 ????? ????? 000 ????? 01100 11", mul, R, R(dest) = src1 * src2);
+    INSTPAT("0000001 ????? ????? 001 ????? 01100 11", mulh, R, R(dest) = MULH(src1, src2));
+    INSTPAT("0000001 ????? ????? 010 ????? 01100 11", mulhsu, R, R(dest) = MULHSU(src1, src2));
+    INSTPAT("0000001 ????? ????? 011 ????? 01100 11", mulhu, R, R(dest) = MULHU(src1, src2));
     INSTPAT("0000001 ????? ????? 000 ????? 01110 11", mulw, R, R(dest) = SEXT(BITS(src1 * src2, 31, 0), 32));
     INSTPAT("0000000 ????? ????? 110 ????? 01100 11", or, R, R(dest) = src1 | src2);
     INSTPAT("??????? ????? ????? 110 ????? 00100 11", ori, I, R(dest) = src1 | imm);
