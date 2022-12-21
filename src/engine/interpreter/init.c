@@ -1,5 +1,5 @@
 #include <cpu/cpu.h>
-#include <monitor/sdb.h>
+#include <sdb.h>
 
 void engine_start()
 {

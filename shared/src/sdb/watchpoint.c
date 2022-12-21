@@ -28,8 +28,7 @@ void init_wp_pool()
     head = NULL;
     free_ = wp_pool;
 }
-
-extern int new_wp(ASTNode *node)
+int new_wp(ASTNode *node)
 {
     if (free_ == NULL)
         sdb_error(NULL, "No idle watchpoint.");
@@ -56,8 +55,7 @@ void remedy_expr(Token *expr) // a ugly remedy...
         strcat(head->expr, " ");
     }
 }
-
-extern void free_wp(int no)
+void free_wp(int no)
 {
     if (no < 0 || no >= NR_WP)
         sdb_error(NULL, "Illegal watchpoint number.");
@@ -82,8 +80,7 @@ extern void free_wp(int no)
     cur->next = free_;
     free_ = cur;
 }
-
-extern bool traval_wp()
+bool traval_wp()
 {
     WP *cur = head;
     bool ret = false;
@@ -100,8 +97,7 @@ extern bool traval_wp()
     }
     return ret;
 }
-
-extern void print_wp()
+void print_wp()
 {
     WP *cur = head;
     if (!cur)

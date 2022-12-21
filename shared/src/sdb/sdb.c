@@ -1,5 +1,4 @@
 #include "sdb.h"
-#include "debug.h"
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <stdarg.h>
@@ -22,7 +21,7 @@ static Memlog head_log;
 
 static Memlog *cur_ptr = &head_log;
 
-extern void *sdb_calloc(size_t __nmemb, size_t __size)
+void *sdb_calloc(size_t __nmemb, size_t __size)
 {
     cur_ptr->next = calloc(1, sizeof(Memlog));
     Assert(cur_ptr->next != NULL, "Fail to allocate memory for a Memlog structure.");
@@ -99,12 +98,12 @@ void sdb_error(char *loc, char *format, ...)
     longjmp(sdb_env, 1);
 }
 
-extern void sdb_set_batch_mode()
+void sdb_set_batch_mode()
 {
     is_batch_mode = true;
 }
 
-extern void sdb_mainloop()
+void sdb_mainloop()
 {
     if (is_batch_mode)
     {
@@ -153,7 +152,7 @@ extern void sdb_mainloop()
     }
 }
 
-extern void init_sdb()
+void init_sdb()
 {
     /* Initialize the watchpoint pool. */
     init_wp_pool();

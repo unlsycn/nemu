@@ -10,7 +10,7 @@ static Token *new_token(TokenType type, char *begin, char *end)
     return token;
 }
 
-extern void free_tokens(Token *tokens)
+void free_tokens(Token *tokens)
 {
     if (tokens->type == TK_EOL)
     {
@@ -22,7 +22,7 @@ extern void free_tokens(Token *tokens)
     return;
 }
 
-extern bool token_equal(Token *token, const char *str)
+bool token_equal(Token *token, const char *str)
 {
     return strncmp(token->loc, str, token->length) == 0 && str[token->length] == '\0';
 }

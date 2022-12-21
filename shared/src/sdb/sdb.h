@@ -1,8 +1,9 @@
 #ifndef __SDB_H__
 #define __SDB_H__
 
-#include <common.h>
 #include <setjmp.h>
+#include <shared.h>
+#include <stdio.h>
 
 // stmt -> cmd args
 // args -> subcmd
@@ -31,7 +32,7 @@
 
 /* sdb */
 
-extern void *sdb_calloc(size_t __nmemb, size_t __size);
+void *sdb_calloc(size_t __nmemb, size_t __size);
 
 void sdb_error(char *loc, char *format, ...);
 
@@ -70,9 +71,9 @@ struct Token
     int length;
 };
 
-extern void free_tokens(Token *tokens);
+void free_tokens(Token *tokens);
 
-extern bool token_equal(Token *token, const char *str);
+bool token_equal(Token *token, const char *str);
 
 Token *tokenize(char *str);
 
@@ -211,11 +212,11 @@ Handler handler_cmd(Token *token);
 
 /* watchpoint */
 
-extern int new_wp(ASTNode *node);
+int new_wp(ASTNode *node);
 void remedy_expr(Token *expr);
 
-extern void free_wp(int no);
+void free_wp(int no);
 
-extern void print_wp();
+void print_wp();
 
 #endif

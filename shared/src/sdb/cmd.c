@@ -1,8 +1,4 @@
-#include "common.h"
-#include "isa.h"
 #include "sdb.h"
-#include <cpu/cpu.h>
-#include <memory/vaddr.h>
 
 #define ARG_1 this->left_child->handler(this->left_child)
 #define ARG_2 this->left_child->handler(this->left_child)
@@ -15,7 +11,7 @@ ASTValue cmd_c(ASTNode *this)
 
 ASTValue cmd_q(ASTNode *this)
 {
-    nemu_state.state = NEMU_QUIT;
+    quit();
     this->value.i = SDB_QUIT;
     ret_val;
 }
@@ -27,7 +23,7 @@ ASTValue cmd_info(ASTNode *this)
     char *subcmd = ARG_1.str;
     if (strcmp(subcmd, "r") == 0)
     {
-        isa_reg_display();
+        reg_display();
     }
     else if (strcmp(subcmd, "w") == 0)
     {

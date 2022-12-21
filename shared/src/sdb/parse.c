@@ -1,6 +1,4 @@
 #include "sdb.h"
-#include <isa.h>
-#include <memory/vaddr.h>
 
 #pragma region operators
 
@@ -52,7 +50,7 @@ HANDLER_PAT(reg)
 {
     ASTValue val;
     bool success = false;
-    val.i = isa_reg_str2val(this->value.str, &success);
+    val.i = reg_str2val(this->value.str, &success);
     sdb_assert(success, NULL, "Reg %s does not exist.", this->value.str);
     return val;
 }
@@ -106,14 +104,14 @@ bool is_double_punct(char *str)
 
 #pragma region AST_node
 
-extern void delete_AST_node(ASTNode *node)
+void delete_AST_node(ASTNode *node)
 {
     if (node->type == AST_SUBCMD || node->type == AST_REG)
         free(node->value.str);
     free(node);
 }
 
-extern void free_AST(ASTNode *node)
+void free_AST(ASTNode *node)
 {
     if (node->left_child)
         free_AST(node->left_child);
