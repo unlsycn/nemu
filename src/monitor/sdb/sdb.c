@@ -1,7 +1,5 @@
 #include "sdb.h"
 #include "debug.h"
-#include <cpu/cpu.h>
-#include <isa.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <stdarg.h>
@@ -101,12 +99,12 @@ void sdb_error(char *loc, char *format, ...)
     longjmp(sdb_env, 1);
 }
 
-void sdb_set_batch_mode()
+extern void sdb_set_batch_mode()
 {
     is_batch_mode = true;
 }
 
-void sdb_mainloop()
+extern void sdb_mainloop()
 {
     if (is_batch_mode)
     {
@@ -155,7 +153,7 @@ void sdb_mainloop()
     }
 }
 
-void init_sdb()
+extern void init_sdb()
 {
     /* Initialize the watchpoint pool. */
     init_wp_pool();

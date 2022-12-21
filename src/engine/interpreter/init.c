@@ -1,6 +1,5 @@
 #include <cpu/cpu.h>
-
-void sdb_mainloop();
+#include <monitor/sdb.h>
 
 void engine_start()
 {

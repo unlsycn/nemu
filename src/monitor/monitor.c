@@ -1,12 +1,12 @@
 #include <isa.h>
 #include <memory/paddr.h>
+#include <monitor/sdb.h>
 
 void init_rand();
 void init_log(const char *log_file);
 void init_mem();
 void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
-void init_sdb();
 void init_disasm(const char *triple);
 
 static void welcome()
@@ -22,8 +22,6 @@ static void welcome()
 
 #ifndef CONFIG_TARGET_AM
 #include <getopt.h>
-
-void sdb_set_batch_mode();
 
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
