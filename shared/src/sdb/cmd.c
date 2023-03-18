@@ -1,7 +1,7 @@
 #include "sdb.h"
 
 #define ARG_1 this->left_child->handler(this->left_child)
-#define ARG_2 this->left_child->handler(this->left_child)
+#define ARG_2 this->right_child->handler(this->right_child)
 
 ASTValue cmd_c(ASTNode *this)
 {
@@ -64,14 +64,19 @@ ASTValue cmd_x(ASTNode *this)
 {
     int n = ARG_1.i;
     vaddr_t addr = ARG_2.i;
-    vaddr_read(addr, n * 4);
+    printf("Addr%*sMem\n", 14, "");
+    for (int i = 0; i < n; i++)
+    {
+        vaddr_t cur_addr = addr + i * 4;
+        printf(FMT_WORD_LH FMT_WORD_LH "\n", cur_addr, vaddr_read(cur_addr, 4));
+    }
     ret_val;
 }
 
 static Cmd cmd_table[] = {
     {"help", "Display information about all supported commands.", AST_CMD_HELP, cmd_help},
     {"c", "Continue the execution of the program.", AST_CMD_C, cmd_c},
-    {"q", "Exit NEMU.", AST_CMD_Q, cmd_q},
+    {"q", "Exit.", AST_CMD_Q, cmd_q},
     {"si", "Excute N instructions.", AST_CMD_SI, cmd_si},
     {"info", "Describe the state of your program.", AST_CMD_INFO, cmd_info},
     {"x", "Scan the memory.", AST_CMD_X, cmd_x},
