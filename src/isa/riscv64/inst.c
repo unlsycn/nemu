@@ -39,20 +39,20 @@ enum
     {                                                            \
         *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); \
     } while (0)
-#define immB()                                                                                               \
-    do                                                                                                       \
-    {                                                                                                        \
-        *imm = SEXT(BITS(i, 31, 31), 1) << 11 | BITS(i, 7, 7) << 10 | BITS(i, 30, 25) << 4 | BITS(i, 11, 8); \
+#define immB()                                                                                                    \
+    do                                                                                                            \
+    {                                                                                                             \
+        *imm = SEXT(BITS(i, 31, 31), 1) << 12 | BITS(i, 7, 7) << 11 | BITS(i, 30, 25) << 5 | BITS(i, 11, 8) << 1; \
     } while (0)
 #define immU()                                  \
     do                                          \
     {                                           \
         *imm = SEXT(BITS(i, 31, 12), 20) << 12; \
     } while (0)
-#define immJ()                                                                                                   \
-    do                                                                                                           \
-    {                                                                                                            \
-        *imm = SEXT(BITS(i, 31, 31), 1) << 19 | BITS(i, 19, 12) << 11 | BITS(i, 20, 20) << 10 | BITS(i, 30, 21); \
+#define immJ()                                                                                                        \
+    do                                                                                                                \
+    {                                                                                                                 \
+        *imm = SEXT(BITS(i, 31, 31), 1) << 20 | BITS(i, 19, 12) << 12 | BITS(i, 20, 20) << 11 | BITS(i, 30, 21) << 1; \
     } while (0)
 
 static void decode_operand(Decode *s, int *dest, word_t *src1, word_t *src2, word_t *imm, int type)
@@ -128,7 +128,7 @@ static int decode_exec(Decode *s)
 #define _MULH(_ua, _ub, _a, _b) (uint64_t)(((__int128)(_ua##int64_t)_a * (_ub##int64_t)_b) >> 64)
 #endif
 #define WORD(_x) BITS(_x, 31, 0)
-#define JMP() s->dnpc = s->pc + imm * 2;
+#define JMP() s->dnpc = s->pc + imm;
 #define GES(_a, _b) ((int64_t)_a >= (int64_t)_b)
 #define LTS(_a, _b) ((int64_t)_a < (int64_t)_b)
 #define MULH(_a, _b) _MULH(, , _a, _b)
