@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#include <stdbool.h>
+#include <shared.h>
 
     extern void init_sdb();
 

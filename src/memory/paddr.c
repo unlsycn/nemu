@@ -1,3 +1,4 @@
+#include "debug.h"
 #include <device/mmio.h>
 #include <isa.h>
 #include <memory/host.h>
@@ -55,7 +56,13 @@ void init_mem()
 word_t paddr_read(paddr_t addr, int len)
 {
     if (likely(in_pmem(addr)))
+    {
         return pmem_read(addr, len);
+#ifdef CONFIG_MTRACE
+        if (addr >= CONFIG_MTRACE_LEFT && addr <= CONFIG_MTRACE_RIGHT)
+            log_write("[mtrace] address = " FMT_PADDR " is READ %d bytes at pc = " FMT_WORD "\n", addr, len, cpu.pc);
+#endif
+    }
     IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
     out_of_bound(addr);
     return 0;
@@ -66,6 +73,10 @@ void paddr_write(paddr_t addr, int len, word_t data)
     if (likely(in_pmem(addr)))
     {
         pmem_write(addr, len, data);
+#ifdef CONFIG_MTRACE
+        if (addr >= CONFIG_MTRACE_LEFT && addr <= CONFIG_MTRACE_RIGHT)
+            log_write("[mtrace] address = " FMT_PADDR " is WRITTEN %d bytes at pc = " FMT_WORD "\n", addr, len, cpu.pc);
+#endif
         return;
     }
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return );
