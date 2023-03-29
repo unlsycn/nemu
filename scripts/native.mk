@@ -12,6 +12,7 @@ $(BINARY): compile_git
 
 override ARGS ?= --log=$(BUILD_DIR)/nemu-log.txt
 override ARGS += $(ARGS_DIFF)
+export LSAN_OPTIONS := suppressions=$(NEMU_HOME)/leaks.sup
 
 # Command to execute NEMU_EXEC
 IMG ?=

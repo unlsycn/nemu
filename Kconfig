@@ -161,6 +161,11 @@ config MTRACE_RIGHT
   hex "The right bound of memory to trace"
   default 0x87ffffff
 
+config FTRACE
+  depends on TRACE
+  bool "Enable function tracer"
+  default y
+
 config WATCHPOINT
   bool "Enable watchpoint"
   default y
