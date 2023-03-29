@@ -1,5 +1,3 @@
-#include "debug.h"
-#include "utils.h"
 #include <elf.h>
 #include <ftrace.h>
 #include <stdio.h>
