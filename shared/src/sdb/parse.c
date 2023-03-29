@@ -5,7 +5,7 @@
 #define LHS (this->left_child->handler(this->left_child).i)
 #define RHS (this->right_child->handler(this->right_child).i)
 #define I (this->value.i)
-#define STR (this->value.str)
+#define S (this->value.str)
 
 #define HANDLER_PAT(op) ASTValue op##_handler(ASTNode *this)
 #define BINARY_PAT(op)          \
@@ -61,7 +61,7 @@ HANDLER_PAT(number)
 
 #define OP(op)                                  \
     {                                           \
-        str(SYMBOL(op)), AST_##op, op##_handler \
+        STR(SYMBOL(op)), AST_##op, op##_handler \
     }
 
 // declare operator precedence from high to low
@@ -81,7 +81,7 @@ static OperatorPrec logi_or = {1, &logi_and, {OP(LOGI_OR)}};
 #undef LHS
 #undef RHS
 #undef I
-#undef STR
+#undef S
 #pragma endregion
 
 #define HEAD_OP logi_or

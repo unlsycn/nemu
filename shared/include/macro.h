@@ -4,8 +4,8 @@
 #include <string.h>
 
 // macro stringizing
-#define str_temp(x) #x
-#define str(x) str_temp(x)
+#define _STR(x) #x
+#define STR(x) _STR(x)
 
 // strlen() for string constant
 #define STRLEN(CONST_STR) (sizeof(CONST_STR) - 1)
@@ -14,11 +14,11 @@
 #define ARRLEN(arr) (int)(sizeof(arr) / sizeof(arr[0]))
 
 // macro concatenation
-#define concat_temp(x, y) x##y
-#define concat(x, y) concat_temp(x, y)
-#define concat3(x, y, z) concat(concat(x, y), z)
-#define concat4(x, y, z, w) concat3(concat(x, y), z, w)
-#define concat5(x, y, z, v, w) concat4(concat(x, y), z, v, w)
+#define _CONCAT(x, y) x##y
+#define CONCAT(x, y) _CONCAT(x, y)
+#define CONCAT3(x, y, z) CONCAT(CONCAT(x, y), z)
+#define CONCAT4(x, y, z, w) CONCAT3(CONCAT(x, y), z, w)
+#define CONCAT5(x, y, z, v, w) CONCAT4(CONCAT(x, y), z, v, w)
 
 #define CHOOSE1st(a, ...) a
 #define CHOOSE2nd(a, b, ...) b
@@ -36,13 +36,13 @@
 #define DEFER1(m) m EMPTY()
 #define DEFER2(m) m EMPTY EMPTY()()
 
-#define NOT(x) _NOT(concat(_NOT_, x))
+#define NOT(x) _NOT(CONCAT(_NOT_, x))
 #define _NOT(...) CHOOSE2nd(__VA_ARGS__, 0)
 #define _NOT_0 ~, 1
 
 #define BOOL(x) NOT(NOT(x))
 
-#define IF(condition) concat(_IF_, BOOL(condition))
+#define IF(condition) CONCAT(_IF_, BOOL(condition))
 #define _IF_0(...)
 #define _IF_1(...) __VA_ARGS__
 
@@ -63,7 +63,7 @@
 // See https://stackoverflow.com/questions/26099745/test-if-preprocessor-symbol-is-defined-inside-macro
 
 #define MUX_WITH_COMMA(contain_comma, a, b) CHOOSE2nd(contain_comma a, b)
-#define MUX_MACRO_PROPERTY(p, macro, a, b) MUX_WITH_COMMA(concat(p, macro), a, b)
+#define MUX_MACRO_PROPERTY(p, macro, a, b) MUX_WITH_COMMA(CONCAT(p, macro), a, b)
 // define placeholders for some property
 #define __P_DEF_0 X,
 #define __P_DEF_1 X,
@@ -86,7 +86,7 @@
 // test if a macro of ANY type is defined
 // NOTE1: it ONLY works inside a function, since it calls `strcmp()`
 // NOTE2: macros defined to themselves (#define A A) will get wrong results
-#define isdef(macro) (strcmp("" #macro, "" str(macro)) != 0)
+#define isdef(macro) (strcmp("" #macro, "" STR(macro)) != 0)
 
 // simplification for conditional compilation
 #define __IGNORE(...)

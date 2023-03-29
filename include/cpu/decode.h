@@ -112,10 +112,10 @@ finish:
 
 #define INSTPAT_START(name) \
     {                       \
-        const void **__instpat_end = &&concat(__instpat_end_, name);
+        const void **__instpat_end = &&CONCAT(__instpat_end_, name);
 // __instpat_end is the address of the label __instpad_end_{name}, which can be jumped to using goto
 #define INSTPAT_END(name)           \
-    concat(__instpat_end_, name) :; \
+    CONCAT(__instpat_end_, name) :; \
     }
 
 #endif
