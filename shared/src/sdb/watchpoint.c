@@ -80,7 +80,7 @@ void free_wp(int no)
     cur->next = free_;
     free_ = cur;
 }
-bool traval_wp()
+bool travel_wp()
 {
     WP *cur = head;
     bool ret = false;

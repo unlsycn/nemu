@@ -14,7 +14,7 @@ extern "C"
 
     extern void sdb_set_batch_mode();
 
-    extern bool traval_wp();
+    extern bool travel_wp();
 
 #ifdef __cplusplus
 }
