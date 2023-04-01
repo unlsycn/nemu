@@ -8,6 +8,8 @@ extern "C"
 
 #include <shared.h>
 
+    void parse_elf(const char *elf_file);
+
     void check_call(vaddr_t addr);
 
     void check_ret(uint32_t inst);

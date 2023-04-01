@@ -18,6 +18,7 @@ choice
   prompt "Physical memory definition"
   default PMEM_GARRAY
 config PMEM_MALLOC
+  depends on !TARGET_SHARE
   bool "Using malloc()"
 config PMEM_GARRAY
   depends on !TARGET_AM

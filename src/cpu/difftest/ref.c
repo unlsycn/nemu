@@ -5,17 +5,25 @@
 
 void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
 {
-    assert(0);
+    if (direction == DIFFTEST_TO_REF)
+    {
+        memcpy(guest_to_host(addr), buf, n);
+    }
+    else
+    {
+        panic("Not implement!");
+    }
 }
 
 void difftest_regcpy(void *dut, bool direction)
 {
-    assert(0);
+    CPU_state *ctx = (CPU_state *)dut;
+    isa_difftest_regcpy(ctx, direction);
 }
 
 void difftest_exec(uint64_t n)
 {
-    assert(0);
+    cpu_exec(n);
 }
 
 void difftest_raise_intr(word_t NO)
