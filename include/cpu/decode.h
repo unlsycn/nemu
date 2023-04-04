@@ -14,8 +14,8 @@ typedef struct Decode
 } Decode;
 
 // --- pattern matching mechanism ---
-__attribute__((always_inline)) static inline void pattern_decode(const char *str, int len, uint64_t *key,
-                                                                 uint64_t *mask, uint64_t *shift)
+__attribute__((always_inline)) static inline void pattern_decode(const char *str, int len, uint64_t *key, uint64_t *mask,
+                                                                 uint64_t *shift)
 {
     uint64_t __key = 0, __mask = 0, __shift = 0;
     /* bitwise check instrucution pattern e.g.
@@ -68,24 +68,24 @@ finish:
     *shift = __shift;
 }
 
-__attribute__((always_inline)) static inline void pattern_decode_hex(const char *str, int len, uint64_t *key,
-                                                                     uint64_t *mask, uint64_t *shift)
+__attribute__((always_inline)) static inline void pattern_decode_hex(const char *str, int len, uint64_t *key, uint64_t *mask,
+                                                                     uint64_t *shift)
 {
     uint64_t __key = 0, __mask = 0, __shift = 0;
-#define macro(i)                                                                                     \
-    if ((i) >= len)                                                                                  \
-        goto finish;                                                                                 \
-    else                                                                                             \
-    {                                                                                                \
-        char c = str[i];                                                                             \
-        if (c != ' ')                                                                                \
-        {                                                                                            \
-            Assert((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || c == '?',                     \
-                   "invalid character '%c' in pattern string", c);                                   \
-            __key = (__key << 4) | (c == '?' ? 0 : (c >= '0' && c <= '9') ? c - '0' : c - 'a' + 10); \
-            __mask = (__mask << 4) | (c == '?' ? 0 : 0xf);                                           \
-            __shift = (c == '?' ? __shift + 4 : 0);                                                  \
-        }                                                                                            \
+#define macro(i)                                                                                                             \
+    if ((i) >= len)                                                                                                          \
+        goto finish;                                                                                                         \
+    else                                                                                                                     \
+    {                                                                                                                        \
+        char c = str[i];                                                                                                     \
+        if (c != ' ')                                                                                                        \
+        {                                                                                                                    \
+            Assert((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || c == '?', "invalid character '%c' in pattern string", \
+                   c);                                                                                                       \
+            __key = (__key << 4) | (c == '?' ? 0 : (c >= '0' && c <= '9') ? c - '0' : c - 'a' + 10);                         \
+            __mask = (__mask << 4) | (c == '?' ? 0 : 0xf);                                                                   \
+            __shift = (c == '?' ? __shift + 4 : 0);                                                                          \
+        }                                                                                                                    \
     }
 
     macro16(0);
