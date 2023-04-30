@@ -3,6 +3,9 @@
 
 #include <string.h>
 
+#define MIN(x, y) (x < y ? x : y)
+#define MAX(x, y) (x > y ? x : y)
+
 // macro stringizing
 #define _STR(x) #x
 #define STR(x) _STR(x)

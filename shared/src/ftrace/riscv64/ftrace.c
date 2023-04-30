@@ -14,6 +14,7 @@ static struct Func head;
 static bool ftrace_en = true;
 
 static unsigned int indents = 0;
+#define INDENT_MAX 80
 
 void read_section(Elf64_Shdr *sh, void *ptr, FILE *file)
 {
@@ -89,8 +90,8 @@ void check_call(vaddr_t addr)
     {
         if (addr == cur->addr)
         {
+            log_write("[ftrace] %*scall %s@" FMT_WORD_LH "\n", MIN(indents, INDENT_MAX), " ", cur->name, addr);
             indents++;
-            log_write("[ftrace] %*scall %s@" FMT_WORD_LH "\n", indents, " ", cur->name, addr);
             return;
         }
         cur = cur->next;
@@ -103,6 +104,7 @@ void check_ret(uint32_t inst)
         return;
     if (inst == 0x8067)
     {
-        log_write("[ftrace] %*sret\n", indents, " ");
+        indents--;
+        log_write("[ftrace] %*sret\n", MIN(indents, INDENT_MAX), " ");
     }
 }
