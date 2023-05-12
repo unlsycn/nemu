@@ -1,3 +1,4 @@
+#include "csr.h"
 #include <isa.h>
 #include <memory/paddr.h>
 
@@ -14,6 +15,8 @@ static void restart()
 
     /* The zero register is always 0. */
     cpu.gpr[0] = 0;
+
+    init_csr();
 }
 
 void init_isa()
