@@ -1,4 +1,5 @@
 #include "common.h"
+#include "isa.h"
 #include "local-include/reg.h"
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
@@ -230,6 +231,11 @@ static int decode_exec(Decode *s)
     INSTPAT("??????? ????? ????? 101 ????? 11100 11", csrrwi, I, if (dest != 0) R(dest) = Cr(imm); Cw(imm, rs1););
 
     INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
+    INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N,
+            s->dnpc = isa_raise_intr(11, s->pc)); // Machine external interrupt
+
+    INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, R,
+            s->dnpc = cpu.csr.mepc->mepc); // no need to modify mstatus because NEMU only supports M-mode indeed
     INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, INV(s->pc));
     INSTPAT_END();
 
