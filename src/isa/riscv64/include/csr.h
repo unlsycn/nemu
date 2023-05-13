@@ -33,5 +33,6 @@ typedef struct
 void init_csr();
 word_t csr_read(uint16_t addr);
 void csr_write(uint16_t addr, word_t data);
+void csr_display();
 
 #endif

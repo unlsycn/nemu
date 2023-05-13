@@ -1,4 +1,5 @@
 #include "local-include/reg.h"
+#include "csr.h"
 #include <isa.h>
 
 const char *regs[] = {"zero", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
@@ -7,12 +8,13 @@ const char *regs[] = {"zero", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", 
 
 void isa_reg_display()
 {
-    printf("Reg    %-18s  %-20s\n", "Hex", "Dec");
-    printf("[pc]   " FMT_WORD "\n", cpu.pc);
+    printf("Reg     %-18s  %-20s\n", "Hex", "Dec");
+    printf("[pc]    " FMT_WORD "\n", cpu.pc);
     for (int i = 0; i < 32; i++)
     {
-        printf("%-4s   " FMT_WORD_LH "  " FMT_WORD_LD "\n", regs[i], gpr(i), gpr(i));
+        printf("%-8s" FMT_WORD_LH "  " FMT_WORD_LD "\n", regs[i], gpr(i), gpr(i));
     }
+    csr_display();
 }
 
 word_t isa_reg_str2val(const char *s, bool *success)

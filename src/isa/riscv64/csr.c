@@ -5,6 +5,9 @@
 word_t csr_space[4096];
 bool csr_valid[4096];
 
+#define _CSR_NAME(name, addr) STR(name),
+const char *csrs[] = {MAP(CSRS, _CSR_NAME)};
+
 void init_csr()
 {
 #define CSR_INIT(name, addr)                               \
@@ -34,4 +37,14 @@ void csr_write(uint16_t addr, word_t data)
         csr_space[addr] = data;
     else
         panic("TODO: CSR invalid. Should raise a instruction exception.");
+}
+
+void csr_display()
+{
+    for (int i = 0; i < sizeof(CSRs) / sizeof(mepc_t *); i++)
+    {
+        word_t **csr = (word_t **)&cpu.csr;
+        printf("%-8s" FMT_WORD_LH "  " FMT_WORD_LD "\n", csrs[i], **csr, **csr);
+        (*csr)++;
+    }
 }
