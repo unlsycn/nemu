@@ -17,11 +17,11 @@
     } CONCAT(name, _t);
 
 CSR_TYPE(mepc, mepc : MXLEN)
-CSR_TYPE(mtvec, base : MXLEN - 2, mode : 2)
-CSR_TYPE(mstatus, SD : 1, WPRI1
-         : MXLEN - 37, SXL : 2, UXL : 2, WPRI2 : 9, TSR : 1, TW : 1, TVM : 1, MXR : 1, SUM : 1, MPRV : 1, XS : 2, FS : 2,
-           MPP : 2, WPRI3 : 2, SPP : 2, MPIE : 1, WPRI4 : 1, UPIE : 1, MIE : 1, WPRI5 : 1, SIE : 1, UIE : 1)
-CSR_TYPE(mcause, intr : 1, code : MXLEN - 1)
+CSR_TYPE(mtvec, mode : 2, base : MXLEN - 2)
+CSR_TYPE(mstatus, UIE : 1, SIE : 1, WPRI1 : 1, MIE : 1, UPIE : 1, SPIE : 1, WPRI2 : 1, MPIE : 1, SPP : 2, WPRI3 : 2, MPP : 2,
+         FS : 2, XS : 2, MPRV : 1, SUM : 1, MXR : 1, TVM : 1, TW : 1, TSR : 1, WPRI4 : 9, UXL : 2, SXL : 2, WPRI5
+         : MXLEN - 37, SD : 1)
+CSR_TYPE(mcause, code : MXLEN - 1, intr : 1)
 #undef _WORD_T
 
 typedef struct

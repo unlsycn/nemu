@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #define R(i) gpr(i)
+#define CSR cpu.csr
 #define Mr vaddr_read
 #define Mw vaddr_write
 #define Cr csr_read
@@ -235,7 +236,9 @@ static int decode_exec(Decode *s)
             s->dnpc = isa_raise_intr(11, s->pc)); // Machine external interrupt
 
     INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, R,
-            s->dnpc = cpu.csr.mepc->mepc); // no need to modify mstatus because NEMU only supports M-mode indeed
+            s->dnpc = CSR.mepc->mepc); // no need to modify mstatus because NEMU only supports M-mode indeed
+    // CSR.mstatus->MIE = CSR.mstatus->MPIE;
+    // CSR.mstatus->MPIE = 1);
     INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, INV(s->pc));
     INSTPAT_END();
 
@@ -249,3 +252,19 @@ int isa_exec_once(Decode *s)
     s->isa.inst.val = inst_fetch(&s->snpc, 4);
     return decode_exec(s);
 }
+
+#undef WORD
+#undef JMP
+#undef GES
+#undef LTS
+#undef MULH
+#undef MULHSU
+#undef MULHU
+#undef DIVOF
+#undef DIVBZ
+#undef R
+#undef CSR
+#undef Mr
+#undef Mw
+#undef Cr
+#undef Cw

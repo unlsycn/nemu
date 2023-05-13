@@ -6,7 +6,7 @@ word_t csr_space[4096];
 bool csr_valid[4096];
 
 #define _CSR_NAME(name, addr) STR(name),
-const char *csrs[] = {MAP(CSRS, _CSR_NAME)};
+const char *csr_name[] = {MAP(CSRS, _CSR_NAME)};
 
 void init_csr()
 {
@@ -44,7 +44,7 @@ void csr_display()
     for (int i = 0; i < sizeof(CSRs) / sizeof(mepc_t *); i++)
     {
         word_t **csr = (word_t **)&cpu.csr;
-        printf("%-8s" FMT_WORD_LH "  " FMT_WORD_LD "\n", csrs[i], **csr, **csr);
+        printf("%-8s" FMT_WORD_LH "  " FMT_WORD_LD "\n", csr_name[i], **csr, **csr);
         (*csr)++;
     }
 }
