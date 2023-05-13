@@ -129,18 +129,18 @@ config TRACE
   bool "Enable tracer"
   default y
 
+if TRACE
+
 config TRACE_START
-  depends on TRACE
   int "When tracing is enabled (unit: number of instructions)"
   default 0
 
 config TRACE_END
-  depends on TRACE
   int "When tracing is disabled (unit: number of instructions)"
   default 10000
 
 config ITRACE
-  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on TARGET_NATIVE_ELF && ENGINE_INTERPRETER
   bool "Enable instruction tracer"
   default y
 
@@ -150,7 +150,6 @@ config ITRACE_COND
   default "true"
 
 config MTRACE
-  depends on TRACE
   bool "Enable memory tracer"
   default y
 
@@ -165,14 +164,19 @@ config MTRACE_RIGHT
   default 0x87ffffff
 
 config FTRACE
-  depends on TRACE
   bool "Enable function tracer"
   default y
 
 config DTRACE
-  depends on TRACE && DEVICE
+  depends on DEVICE
   bool "Enable device tracer"
   default y
+
+config ETRACE
+  bool "Enable exception tracer"
+  default y
+
+endif # TRACE
 
 config WATCHPOINT
   bool "Enable watchpoint"

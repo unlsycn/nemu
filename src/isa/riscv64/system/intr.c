@@ -8,6 +8,9 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc)
     // set exception number
     cpu.csr.mcause->val = NO;
 
+    IFDEF(CONFIG_ETRACE, log_write("[etrace] %s code %lu is raised at epc = " FMT_WORD_LH "\n",
+                                   cpu.csr.mcause->intr ? "Interrupt" : "Exception", cpu.csr.mcause->code, epc));
+
     int offset = cpu.csr.mtvec->mode == 1 && cpu.csr.mcause->intr ? cpu.csr.mcause->code * 4 : 0; // Vectored MODE
     return (cpu.csr.mtvec->base << 2) + offset;
 }
