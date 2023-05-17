@@ -27,7 +27,8 @@ static void welcome()
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
-static char *elf_file = NULL;
+static char *elf_file[32] = {};
+static int elf_nr = 0;
 static int difftest_port = 1234;
 
 static long load_img()
@@ -83,7 +84,8 @@ static int parse_args(int argc, char *argv[])
             diff_so_file = optarg;
             break;
         case 'e':
-            elf_file = optarg;
+            elf_file[elf_nr] = optarg;
+            elf_nr++;
             break;
         case 1:
             img_file = optarg;
@@ -131,7 +133,9 @@ void init_monitor(int argc, char *argv[])
     init_difftest(diff_so_file, img_size, difftest_port);
 
     /* Initialize function tracer*/
-    IFDEF(CONFIG_FTRACE, IFDEF(CONFIG_ISA_riscv64, parse_elf(elf_file)));
+    for (int i = 0; i < elf_nr; i++)
+        IFDEF(CONFIG_FTRACE, IFDEF(CONFIG_ISA_riscv64, parse_elf(elf_file[i])));
+
 #ifndef CONFIG_ISA_loongarch32r
     IFDEF(CONFIG_ITRACE, init_disasm(MUXDEF(CONFIG_ISA_x86, "i686",
                                             MUXDEF(CONFIG_ISA_mips32, "mipsel",

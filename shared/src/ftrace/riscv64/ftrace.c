@@ -10,6 +10,7 @@ struct Func
 };
 
 static struct Func head;
+static struct Func *end = &head;
 
 static bool ftrace_en = true;
 
@@ -31,6 +32,8 @@ void parse_elf(const char *elf_file)
     }
     FILE *file = fopen(elf_file, "rb");
     Assert(file, "ELF file does not exist.");
+
+    Log("Read %s for ftrace", elf_file);
 
     // read ELF header
     Elf64_Ehdr elf_header;
@@ -64,7 +67,7 @@ void parse_elf(const char *elf_file)
 
     // read functions
     int symbol_count = symtab_shptr->sh_size / sizeof(Elf64_Sym);
-    struct Func *cur = &head;
+    struct Func *cur = end;
     while (symbol_count--)
     {
         if (ELF64_ST_TYPE(symtab_ptr->st_info) == STT_FUNC)
@@ -77,6 +80,7 @@ void parse_elf(const char *elf_file)
         symtab_ptr++;
     }
     cur->next = NULL;
+    end = cur;
 
     fclose(file);
 }
