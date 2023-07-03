@@ -8,6 +8,9 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc)
     // set exception number
     cpu.csr.mcause->val = NO;
 
+    cpu.csr.mstatus->MPIE = cpu.csr.mstatus->MIE;
+    cpu.csr.mstatus->MIE = 0;
+
     IFDEF(CONFIG_ETRACE, log_write("[etrace] %s code %lu is raised at epc = " FMT_WORD_LH "\n",
                                    cpu.csr.mcause->intr ? "Interrupt" : "Exception", cpu.csr.mcause->code, epc));
 

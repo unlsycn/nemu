@@ -235,10 +235,8 @@ static int decode_exec(Decode *s)
     INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N,
             s->dnpc = isa_raise_intr(11, s->pc)); // Machine external interrupt
 
-    INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, R,
-            s->dnpc = CSR.mepc->mepc); // no need to modify mstatus because NEMU only supports M-mode indeed
-    // CSR.mstatus->MIE = CSR.mstatus->MPIE;
-    // CSR.mstatus->MPIE = 1);
+    INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, R, s->dnpc = CSR.mepc->mepc; CSR.mstatus->MIE = CSR.mstatus->MPIE;
+            CSR.mstatus->MPIE = 1); // no need to modify MPP because NEMU only supports M-mode indeed
     INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, INV(s->pc));
     INSTPAT_END();
 
