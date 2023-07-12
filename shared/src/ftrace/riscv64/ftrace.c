@@ -1,5 +1,6 @@
 #include <elf.h>
 #include <ftrace.h>
+#include <shared.h>
 #include <stdio.h>
 
 struct Func
@@ -85,7 +86,7 @@ void parse_elf(const char *elf_file)
     fclose(file);
 }
 
-void check_call(vaddr_t addr)
+void check_call(uint64_t addr)
 {
     if (!ftrace_en)
         return;

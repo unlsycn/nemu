@@ -1,12 +1,11 @@
 #ifndef __SDB_H__
 #define __SDB_H__
 
+#include <stdbool.h>
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-#include <shared.h>
 
     extern void init_sdb();
 
