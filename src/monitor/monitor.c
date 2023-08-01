@@ -1,3 +1,4 @@
+#include "memory/cache.h"
 #include <isa.h>
 #include <memory/paddr.h>
 #include <sdb.h>
@@ -119,6 +120,8 @@ void init_monitor(int argc, char *argv[])
 
     /* Initialize memory. */
     init_mem();
+
+    IFDEF(CONFIG_CACHE_SIM, init_cache());
 
     /* Initialize devices. */
     IFDEF(CONFIG_DEVICE, init_device());
