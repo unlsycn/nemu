@@ -1,6 +1,9 @@
 #include "common.h"
+#include "cpu/difftest.h"
+#include "debug.h"
 #include "isa.h"
 #include "local-include/reg.h"
+#include "memory/cache.h"
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <cpu/ifetch.h>
@@ -237,6 +240,7 @@ static int decode_exec(Decode *s)
 
     INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, R, s->dnpc = CSR.mepc->mepc; CSR.mstatus->MIE = CSR.mstatus->MPIE;
             CSR.mstatus->MPIE = 1); // no need to modify MPP because NEMU only supports M-mode indeed
+    INSTPAT("0000000 00000 00000 001 00000 00011 11", fence.i, I, flush_cache());
     INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, INV(s->pc));
     INSTPAT_END();
 

@@ -75,7 +75,8 @@ void paddr_write(paddr_t addr, int len, word_t data)
         pmem_write(addr, len, data);
 #ifdef CONFIG_MTRACE
         if (addr >= CONFIG_MTRACE_LEFT && addr <= CONFIG_MTRACE_RIGHT)
-            log_write("[mtrace] address = " FMT_PADDR " is WRITTEN %d bytes at pc = " FMT_WORD "\n", addr, len, cpu.pc);
+            log_write("[mtrace] address = " FMT_PADDR " is WRITTEN %d bytes at pc = " FMT_WORD ",data = " FMT_WORD "\n", addr,
+                      len, cpu.pc, data);
 #endif
         return;
     }

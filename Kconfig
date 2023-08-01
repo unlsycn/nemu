@@ -178,6 +178,11 @@ config ETRACE
   bool "Enable exception tracer"
   default y
 
+config CTRACE
+  depends on CACHE_SIM
+  bool "Enable cache tracer"
+  default n
+
 endif # TRACE
 
 config WATCHPOINT
