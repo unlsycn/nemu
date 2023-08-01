@@ -194,8 +194,8 @@ static const uint8_t mbr[] = {
     0xeb, 0xfe, // jmp here
 
     // GDT
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x9a, 0xcf, 0x00, 0xff, 0xff, 0x00,
-    0x00, 0x00, 0x92, 0xcf, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x9a, 0xcf, 0x00, 0xff, 0xff, 0x00, 0x00,
+    0x00, 0x92, 0xcf, 0x00,
 
     // GDT descriptor
     0x17, 0x00, 0x10, 0x7c, 0x00, 0x00};
@@ -328,8 +328,8 @@ static void kvm_exec(uint64_t n)
         {
             if (vcpu.kvm_run->exit_reason == KVM_EXIT_HLT)
                 return;
-            fprintf(stderr, "Got exit_reason %d at pc = 0x%llx, expected KVM_EXIT_DEBUG (%d)\n",
-                    vcpu.kvm_run->exit_reason, vcpu.kvm_run->s.regs.regs.rip, KVM_EXIT_DEBUG);
+            fprintf(stderr, "Got exit_reason %d at pc = 0x%llx, expected KVM_EXIT_DEBUG (%d)\n", vcpu.kvm_run->exit_reason,
+                    vcpu.kvm_run->s.regs.regs.rip, KVM_EXIT_DEBUG);
             assert(0);
         }
         else
@@ -378,7 +378,7 @@ static void run_protected_mode()
     kvm_exec(10);
 }
 
-void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
+__EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
 {
     if (direction == DIFFTEST_TO_REF)
         memcpy(vm.mem + addr, buf, n);
@@ -386,7 +386,7 @@ void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
         memcpy(buf, vm.mem + addr, n);
 }
 
-void difftest_regcpy(void *r, bool direction)
+__EXPORT void difftest_regcpy(void *r, bool direction)
 {
     struct kvm_regs *ref = &(vcpu.kvm_run->s.regs.regs);
     x86_CPU_state *x86 = r;
@@ -418,12 +418,12 @@ void difftest_regcpy(void *r, bool direction)
     }
 }
 
-void difftest_exec(uint64_t n)
+__EXPORT void difftest_exec(uint64_t n)
 {
     kvm_exec(n);
 }
 
-void difftest_raise_intr(word_t NO)
+__EXPORT void difftest_raise_intr(word_t NO)
 {
     uint32_t pgate_vaddr = vcpu.kvm_run->s.regs.sregs.idt.base + NO * 8;
     uint32_t pgate = va2pa(pgate_vaddr);
@@ -443,7 +443,7 @@ void difftest_raise_intr(word_t NO)
     }
 }
 
-void difftest_init(int port)
+__EXPORT void difftest_init(int port)
 {
     vm_init(CONFIG_MSIZE);
     vcpu_init();

@@ -10,7 +10,7 @@ typedef CONCAT(__GUEST_ISA__, _CPU_state) CPU_state;
 typedef CONCAT(__GUEST_ISA__, _ISADecodeInfo) ISADecodeInfo;
 
 // monitor
-extern char isa_logo[];
+extern unsigned char isa_logo[];
 void init_isa();
 
 // reg

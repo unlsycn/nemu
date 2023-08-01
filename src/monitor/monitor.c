@@ -137,22 +137,17 @@ void init_monitor(int argc, char *argv[])
 
     /* Initialize function tracer*/
     for (int i = 0; i < elf_nr; i++)
-        IFDEF(CONFIG_FTRACE, IFDEF(CONFIG_ISA_riscv64, parse_elf(elf_file[i])));
+        IFDEF(CONFIG_FTRACE, IFDEF(CONFIG_ISA_riscv, parse_elf(elf_file[i])));
 
 #ifndef CONFIG_ISA_loongarch32r
     IFDEF(CONFIG_ITRACE, init_disasm(MUXDEF(CONFIG_ISA_x86, "i686",
                                             MUXDEF(CONFIG_ISA_mips32, "mipsel",
-                                                   MUXDEF(CONFIG_ISA_riscv32, "riscv32",
-                                                          MUXDEF(CONFIG_ISA_riscv64, "riscv64", "bad")))) "-pc-linux-gnu"));
+                                                   MUXDEF(CONFIG_ISA_riscv, MUXDEF(CONFIG_RV64, "riscv64", "riscv32"),
+                                                          "bad"))) "-pc-linux-gnu"));
 #endif
 
     /* Initialize the simple debugger. */
     init_sdb();
-
-    IFDEF(CONFIG_ITRACE, init_disasm(MUXDEF(CONFIG_ISA_x86, "i686",
-                                            MUXDEF(CONFIG_ISA_mips32, "mipsel",
-                                                   MUXDEF(CONFIG_ISA_riscv32, "riscv32",
-                                                          MUXDEF(CONFIG_ISA_riscv64, "riscv64", "bad")))) "-pc-linux-gnu"));
 
     /* Display welcome message. */
     welcome();
