@@ -1,3 +1,4 @@
+#include "cpu/difftest.h"
 #include <dlfcn.h>
 
 #include <cpu/cpu.h>
@@ -13,6 +14,19 @@ void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 
 #ifdef CONFIG_DIFFTEST
 
+bool difftest_enable = true;
+void difftest_attach()
+{
+    difftest_enable = true;
+    ref_difftest_memcpy(PMEM_LEFT, guest_to_host(PMEM_LEFT), CONFIG_MSIZE, DIFFTEST_TO_REF);
+    ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+}
+
+void difftest_detach()
+{
+    difftest_enable = false;
+}
+
 static bool is_skip_ref = false;
 static int skip_dut_nr_inst = 0;
 
@@ -20,6 +34,9 @@ static int skip_dut_nr_inst = 0;
 // can not produce consistent behavior with NEMU
 void difftest_skip_ref()
 {
+    if (!difftest_enable)
+        return;
+
     is_skip_ref = true;
     // If such an instruction is one of the instruction packing in QEMU
     // (see below), we end the process of catching up with QEMU's pc to
@@ -39,6 +56,9 @@ void difftest_skip_ref()
 //   We expect that DUT will catch up with REF within `nr_dut` instructions.
 void difftest_skip_dut(int nr_ref, int nr_dut)
 {
+    if (!difftest_enable)
+        return;
+
     skip_dut_nr_inst += nr_dut;
 
     while (nr_ref-- > 0)
@@ -93,6 +113,9 @@ static void checkregs(CPU_state *ref, vaddr_t pc)
 
 void difftest_step(vaddr_t pc, vaddr_t npc)
 {
+    if (!difftest_enable)
+        return;
+
     CPU_state ref_r;
 
     if (skip_dut_nr_inst > 0)

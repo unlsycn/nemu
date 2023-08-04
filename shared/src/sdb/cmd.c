@@ -6,14 +6,14 @@
 ASTValue cmd_c(ASTNode *this)
 {
     cpu_exec(-1);
-    ret_val;
+    return this->value;
 }
 
 ASTValue cmd_q(ASTNode *this)
 {
     quit();
     this->value.i = SDB_QUIT;
-    ret_val;
+    return this->value;
 }
 
 ASTValue cmd_help(ASTNode *this);
@@ -29,27 +29,31 @@ ASTValue cmd_info(ASTNode *this)
     {
         print_wp();
     }
-    ret_val;
+    else
+    {
+        printf("Unknown command '%s'.\n", subcmd);
+    }
+    return this->value;
 }
 
 ASTValue cmd_si(ASTNode *this)
 {
     word_t n = ARG_1.i;
     cpu_exec(n);
-    ret_val;
+    return this->value;
 }
 
 ASTValue cmd_p(ASTNode *this)
 {
     printf(FMT_WORD_LD "\n", ARG_1.i);
-    ret_val;
+    return this->value;
 }
 
 ASTValue cmd_w(ASTNode *this)
 {
     printf("Watchpoint created: Watchpoint %d.\n", new_wp(this->left_child));
     this->value.i = SDB_WP;
-    ret_val;
+    return this->value;
 }
 
 ASTValue cmd_d(ASTNode *this)
@@ -57,7 +61,7 @@ ASTValue cmd_d(ASTNode *this)
     int no = ARG_1.i;
     free_wp(no);
     printf("Watchpoint %d removed.\n", no);
-    ret_val;
+    return this->value;
 }
 
 ASTValue cmd_x(ASTNode *this)
@@ -70,7 +74,25 @@ ASTValue cmd_x(ASTNode *this)
         vaddr_t cur_addr = addr + i * 4;
         printf(FMT_WORD_LH FMT_WORD_LH "\n", cur_addr, vaddr_read(cur_addr, 4));
     }
-    ret_val;
+    return this->value;
+}
+
+ASTValue cmd_diff(ASTNode *this)
+{
+    char *subcmd = ARG_1.str;
+    if (strcmp(subcmd, "a") == 0)
+    {
+        difftest_attach();
+    }
+    else if (strcmp(subcmd, "d") == 0)
+    {
+        difftest_detach();
+    }
+    else
+    {
+        printf("Unknown command '%s'.\n", subcmd);
+    }
+    return this->value;
 }
 
 static Cmd cmd_table[] = {
@@ -83,7 +105,7 @@ static Cmd cmd_table[] = {
     {"p", "Print the value of the expression.", AST_CMD_P, cmd_p},
     {"w", "Add a watchpoint which pauses the execution when the value of the expression changes.", AST_CMD_W, cmd_w},
     {"d", "Delete specified watchpoint.", AST_CMD_D, cmd_d},
-};
+    {"diff", "attach/detach difftest", AST_CMD_DIFF, cmd_diff}};
 
 #define NR_CMD ARRLEN(cmd_table)
 
@@ -124,10 +146,10 @@ ASTValue cmd_help(ASTNode *this)
             if (strcmp(cmd, cmd_table[i].name) == 0)
             {
                 printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
-                ret_val;
+                return this->value;
             }
         }
         printf("Unknown command '%s'.\n", cmd);
     }
-    ret_val;
+    return this->value;
 }

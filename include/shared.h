@@ -3,6 +3,7 @@
 
 #include <common.h>
 #include <cpu/cpu.h>
+#include <cpu/difftest.h>
 #include <isa.h>
 #include <memory/vaddr.h>
 

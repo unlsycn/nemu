@@ -12,18 +12,18 @@
     HANDLER_PAT(op)             \
     {                           \
         I = LHS SYMBOL(op) RHS; \
-        ret_val;                \
+        return this->value;     \
     }
 #define UNARY_PAT(op)       \
     HANDLER_PAT(op)         \
     {                       \
         I = SYMBOL(op) LHS; \
-        ret_val;            \
+        return this->value; \
     }
 
 HANDLER_PAT(subcmd)
 {
-    ret_val;
+    return this->value;
 }
 MAP(BINARY_PAT, LOGI_OR, LOGI_AND, BIT_OR, BIT_XOR, BIT_AND, EQ, NEQ, LE, LT, GE, GT, LS, RS, ADD, SUB, MUL);
 HANDLER_PAT(DIV)
@@ -31,20 +31,20 @@ HANDLER_PAT(DIV)
     word_t rhs = RHS;
     Assert(rhs != 0, "Division by zero is illegal.");
     I = LHS / rhs;
-    ret_val;
+    return this->value;
 }
 HANDLER_PAT(MOD)
 {
     word_t rhs = RHS;
     Assert(rhs != 0, "Remainder by zero is illegal.");
     I = LHS % rhs;
-    ret_val;
+    return this->value;
 }
 MAP(UNARY_PAT, LOGI_NOT, BIT_NOT, POS, NEG);
 HANDLER_PAT(DEREF)
 {
     I = vaddr_read(LHS, 1);
-    ret_val;
+    return this->value;
 }
 HANDLER_PAT(reg)
 {
@@ -56,7 +56,7 @@ HANDLER_PAT(reg)
 }
 HANDLER_PAT(number)
 {
-    ret_val;
+    return this->value;
 }
 
 #define OP(op)                                  \

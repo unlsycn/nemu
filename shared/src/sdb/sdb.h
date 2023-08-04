@@ -87,6 +87,7 @@ typedef enum
     AST_CMD_Q,
     // cmd subcmd
     AST_CMD_HELP,
+    AST_CMD_DIFF,
     AST_CMD_INFO,
     // cmd expr
     AST_CMD_SI,
@@ -186,8 +187,6 @@ struct OperatorPrec
 };
 
 bool is_double_punct(char *str);
-
-#define ret_val return this->value;
 
 void delete_AST_node(ASTNode *node);
 
