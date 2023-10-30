@@ -32,9 +32,11 @@ void parse_elf(const char *elf_file)
         return;
     }
     FILE *file = fopen(elf_file, "rb");
-    Assert(file, "ELF file does not exist.");
-
-    Log("Read %s for ftrace", elf_file);
+    if (!file)
+    {
+        Log("ELF file %s does not exist.", elf_file);
+        return;
+    }
 
     // read ELF header
     Elf64_Ehdr elf_header;
@@ -58,7 +60,11 @@ void parse_elf(const char *elf_file)
             read_section(symtab_shptr, symtab_ptr, file);
         }
     }
-    Assert(symtab_ptr != NULL, "Cannot find symtab.");
+    if (!symtab_ptr)
+    {
+        Log("Cannot find symtab in %s.", elf_file);
+        return;
+    }
 
     // read string table
     Elf64_Shdr *strtab_shptr = &section_header[symtab_shptr->sh_link];
@@ -84,6 +90,7 @@ void parse_elf(const char *elf_file)
     end = cur;
 
     fclose(file);
+    Log("Read %s for ftrace", elf_file);
 }
 
 void check_call(uint64_t addr)
