@@ -28,7 +28,7 @@ word_t csr_read(uint16_t addr)
     if (check_csr_valid(addr))
         return csr_space[addr];
     else
-        panic("TODO: CSR invalid. Should raise a instruction exception.");
+        panic("TODO: CSR at %x invalid to read. Should raise a instruction exception.", addr);
 }
 
 void csr_write(uint16_t addr, word_t data)
@@ -36,7 +36,7 @@ void csr_write(uint16_t addr, word_t data)
     if (check_csr_valid(addr))
         csr_space[addr] = data;
     else
-        panic("TODO: CSR invalid. Should raise a instruction exception.");
+        panic("TODO: CSR at %x invalid to write. Should raise a instruction exception.", addr);
 }
 
 void csr_display()
