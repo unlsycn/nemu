@@ -1,7 +1,8 @@
+#include "bp.h"
+#include "isa.h"
 #include "memory/cache.h"
-#include <isa.h>
-#include <memory/paddr.h>
-#include <sdb.h>
+#include "memory/paddr.h"
+#include "sdb.h"
 
 void init_rand();
 void init_log(const char *log_file);
@@ -145,6 +146,8 @@ void init_monitor(int argc, char *argv[])
                                                    MUXDEF(CONFIG_ISA_riscv, MUXDEF(CONFIG_RV64, "riscv64", "riscv32"),
                                                           "bad"))) "-pc-linux-gnu"));
 #endif
+
+    IFDEF(CONFIG_BRANCH_PREDICTION, init_pred());
 
     /* Initialize the simple debugger. */
     init_sdb();

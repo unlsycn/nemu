@@ -229,6 +229,11 @@ config DIFFTEST_REF_NAME
   default "kvm" if DIFFTEST_REF_KVM
   default "spike" if DIFFTEST_REF_SPIKE
   default "none"
+  
+config BRANCH_PREDICTION
+  bool "Evaluate branch predictors' accuracy"
+  default n
+
 endmenu
 
 if MODE_SYSTEM

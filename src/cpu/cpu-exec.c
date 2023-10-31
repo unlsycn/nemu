@@ -1,10 +1,11 @@
-#include "memory/cache.h"
-#include "utils.h"
-#include <cpu/cpu.h>
-#include <cpu/decode.h>
-#include <cpu/difftest.h>
 #include <locale.h>
-#include <sdb.h>
+
+#include "bp.h"
+#include "cpu/decode.h"
+#include "cpu/difftest.h"
+#include "memory/cache.h"
+#include "sdb.h"
+#include "utils.h"
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -55,6 +56,7 @@ static void exec_once(Decode *s, vaddr_t pc)
     s->snpc = pc; // snpc + 4 in inst_fecth
     isa_exec_once(s);
     cpu.pc = s->dnpc; // dnpc is determined in decoding
+    cpu.csr.cycle->val++;
 #ifdef CONFIG_ITRACE  // output insts and disassembly to Deocde.logbuf
     char *p = s->logbuf;
     p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
@@ -107,6 +109,7 @@ static void statistic()
     else
         Log("Finish running in less than 1 us and can not calculate the simulation frequency");
     cache_statistic();
+    bp_statistic();
 }
 
 static void print_iringbuf()
