@@ -8,9 +8,11 @@ void init_pred();
 
 void branch_check_pred(uint64_t ip, bool taken);
 
-void call_update_pred(int64_t addr);
+void call_update_pred(uint64_t addr);
 
-void ret_check_pred(int64_t addr);
+void ret_check_pred(uint64_t addr);
+
+void jmp_check_pred(uint64_t ip, uint64_t addr);
 
 void bp_statistic();
 

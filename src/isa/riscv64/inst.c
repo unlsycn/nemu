@@ -104,7 +104,7 @@ static void decode_operand(Decode *s, int *dest, word_t *src1, word_t *src2, wor
     }
 }
 
-static inline void jalr_ras(word_t rs1, word_t rd, uint64_t snpc, uint64_t dnpc)
+static inline void jalr_check_pred(word_t rs1, word_t rd, uint64_t pc, uint64_t snpc, uint64_t dnpc)
 {
     bool rs1_link = rs1 == 1 || rs1 == 5;
     bool rd_link = rd == 1 || rd == 5;
@@ -121,6 +121,8 @@ static inline void jalr_ras(word_t rs1, word_t rd, uint64_t snpc, uint64_t dnpc)
     }
     else if (rs1_link)
         ret_check_pred(dnpc);
+    else
+        jmp_check_pred(pc, dnpc);
 }
 
 static int decode_exec(Decode *s)
@@ -202,10 +204,11 @@ static int decode_exec(Decode *s)
             : SEXT((int32_t)WORD(src1) / (int32_t)WORD(src2), 32));
     INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal, J, R(dest) = s->snpc; JMP();
             IFDEF(CONFIG_FTRACE, check_call(s->dnpc));
-            IFDEF(CONFIG_BRANCH_PREDICTION, if (dest == 1 || dest == 5) call_update_pred(s->snpc)));
+            IFDEF(CONFIG_BRANCH_PREDICTION, if (dest == 1 || dest == 5) call_update_pred(s->snpc);
+                  else jmp_check_pred(s->pc, s->dnpc)));
     INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr, I, R(dest) = s->snpc; s->dnpc = (src1 + imm) & ~1;
             IFDEF(CONFIG_FTRACE, check_call(s->dnpc); check_ret(INSTPAT_INST(s)));
-            IFDEF(CONFIG_BRANCH_PREDICTION, jalr_ras(rs1, dest, s->snpc, s->dnpc)));
+            IFDEF(CONFIG_BRANCH_PREDICTION, jalr_check_pred(rs1, dest, s->pc, s->snpc, s->dnpc)));
     INSTPAT("??????? ????? ????? 000 ????? 00000 11", lb, I, R(dest) = SEXT(Mr(src1 + imm, 1), 8));
     INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu, I, R(dest) = Mr(src1 + imm, 1));
     INSTPAT("??????? ????? ????? 011 ????? 00000 11", ld, I, R(dest) = Mr(src1 + imm, 8));
