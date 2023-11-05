@@ -3,6 +3,7 @@
 #include "bp.h"
 #include "cpu/decode.h"
 #include "cpu/difftest.h"
+#include "macro.h"
 #include "memory/cache.h"
 #include "sdb.h"
 #include "utils.h"
@@ -109,7 +110,7 @@ static void statistic()
     else
         Log("Finish running in less than 1 us and can not calculate the simulation frequency");
     cache_statistic();
-    bp_statistic();
+    IFDEF(CONFIG_BRANCH_PREDICTION, bp_statistic());
 }
 
 static void print_iringbuf()
