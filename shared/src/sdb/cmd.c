@@ -77,24 +77,6 @@ ASTValue cmd_x(ASTNode *this)
     return this->value;
 }
 
-ASTValue cmd_diff(ASTNode *this)
-{
-    char *subcmd = ARG_1.str;
-    if (strcmp(subcmd, "a") == 0)
-    {
-        difftest_attach();
-    }
-    else if (strcmp(subcmd, "d") == 0)
-    {
-        difftest_detach();
-    }
-    else
-    {
-        printf("Unknown command '%s'.\n", subcmd);
-    }
-    return this->value;
-}
-
 static Cmd cmd_table[] = {
     {"help", "Display information about all supported commands.", AST_CMD_HELP, cmd_help},
     {"c", "Continue the execution of the program.", AST_CMD_C, cmd_c},
@@ -105,7 +87,7 @@ static Cmd cmd_table[] = {
     {"p", "Print the value of the expression.", AST_CMD_P, cmd_p},
     {"w", "Add a watchpoint which pauses the execution when the value of the expression changes.", AST_CMD_W, cmd_w},
     {"d", "Delete specified watchpoint.", AST_CMD_D, cmd_d},
-    {"diff", "attach/detach difftest", AST_CMD_DIFF, cmd_diff}};
+};
 
 #define NR_CMD ARRLEN(cmd_table)
 
