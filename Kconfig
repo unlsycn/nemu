@@ -185,6 +185,10 @@ config CTRACE
 
 endif # TRACE
 
+config GOLDENTRACE
+  bool "Generate golden trace"
+  default n
+
 config WATCHPOINT
   bool "Enable watchpoint"
   default y

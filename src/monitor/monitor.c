@@ -1,11 +1,13 @@
 #include "bp.h"
 #include "isa.h"
+#include "macro.h"
 #include "memory/cache.h"
 #include "memory/paddr.h"
 #include "sdb.h"
 
 void init_rand();
 void init_log(const char *log_file);
+void init_goldentrace(const char *gt_file);
 void init_mem();
 void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
@@ -139,6 +141,8 @@ void init_monitor(int argc, char *argv[])
     /* Initialize function tracer*/
     for (int i = 0; i < elf_nr; i++)
         IFDEF(CONFIG_FTRACE, IFDEF(CONFIG_ISA_riscv, parse_elf(elf_file[i])));
+
+    IFDEF(CONFIG_GOLDENTRACE, init_goldentrace("build/goldentrace.log"));
 
 #ifndef CONFIG_ISA_loongarch32r
     IFDEF(CONFIG_ITRACE, init_disasm(MUXDEF(CONFIG_ISA_x86, "i686",

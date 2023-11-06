@@ -74,7 +74,8 @@ static void decode_operand(Decode *s, int *dest, word_t *src1, word_t *src2, wor
     int rd = BITS(i, 11, 7);
     int rs1 = BITS(i, 19, 15);
     int rs2 = BITS(i, 24, 20);
-    *dest = rd;
+    if (type == TYPE_R || type == TYPE_I || type == TYPE_U || type == TYPE_J)
+        *dest = rd;
     switch (type)
     {
     case TYPE_R:
@@ -279,6 +280,14 @@ static int decode_exec(Decode *s)
     INSTPAT_END();
 
     R(0) = 0; // reset $zero to 0
+
+#ifdef CONFIG_GOLDENTRACE
+    extern FILE *golden_fp;
+    if (dest)
+    {
+        fprintf(golden_fp, "1 %lx %d %lx\n", s->pc, dest, R(dest));
+    }
+#endif
 
     return 0;
 }
