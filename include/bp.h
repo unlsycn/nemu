@@ -6,13 +6,13 @@
 
 void init_pred();
 
-void branch_check_pred(uint64_t ip, bool taken);
+void pred_branch_direction(uint64_t ip, bool taken);
 
-void call_update_pred(uint64_t addr);
+void pred_call(uint64_t addr);
 
-void ret_check_pred(uint64_t addr);
+void pred_ret(uint64_t addr);
 
-void jmp_check_pred(uint64_t ip, uint64_t addr);
+void lookup_btb(uint64_t ip, bool is_ct_inst, uint64_t addr);
 
 void bp_statistic();
 

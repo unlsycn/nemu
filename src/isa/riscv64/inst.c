@@ -1,5 +1,3 @@
-#include <stdint.h>
-
 #include "bp.h"
 #include "common.h"
 #include "cpu/cpu.h"
@@ -114,16 +112,14 @@ static inline void jalr_check_pred(word_t rs1, word_t rd, uint64_t pc, uint64_t 
         if (rs1_link)
         {
             if (rs1 != rd)
-                ret_check_pred(dnpc);
-            call_update_pred(snpc);
+                pred_ret(dnpc);
+            pred_call(snpc);
         }
         else
-            call_update_pred(snpc);
+            pred_call(snpc);
     }
     else if (rs1_link)
-        ret_check_pred(dnpc);
-    else
-        jmp_check_pred(pc, dnpc);
+        pred_ret(dnpc);
 }
 
 static int decode_exec(Decode *s)
@@ -133,10 +129,13 @@ static int decode_exec(Decode *s)
     s->dnpc = s->snpc;
 
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
-#define INSTPAT_MATCH(s, name, type, ... /* execute body */)               \
-    {                                                                      \
-        decode_operand(s, &dest, &src1, &src2, &imm, CONCAT(TYPE_, type)); \
-        __VA_ARGS__;                                                       \
+#define INSTPAT_MATCH(s, name, type, ... /* execute body */)                     \
+    {                                                                            \
+        int inst_type = CONCAT(TYPE_, type);                                     \
+        decode_operand(s, &dest, &src1, &src2, &imm, inst_type);                 \
+        bool is_ct_inst = inst_type == TYPE_B || inst_type == TYPE_J;            \
+        __VA_ARGS__; /* is_ct_inst can be modified here when jalr*/              \
+        IFDEF(CONFIG_BRANCH_PREDICTION, lookup_btb(s->pc, is_ct_inst, s->dnpc)); \
     }
 
     word_t rs1 = BITS(s->isa.inst.val, 19, 15); // use src1 instead of R(rs1) since rs1 may be equal to rd
@@ -174,11 +173,11 @@ static int decode_exec(Decode *s)
 #define DIVOF(_len) (src1 == INT##_len##_MIN && src2 == -1) ? // division overflow
 #define DIVBZ (src2 == 0) ?                                   // division by zero
 
-#define BRANCH(cond)                                                     \
-    {                                                                    \
-        IFDEF(CONFIG_BRANCH_PREDICTION, branch_check_pred(s->pc, cond)); \
-        if (cond)                                                        \
-            JMP();                                                       \
+#define BRANCH(cond)                                                         \
+    {                                                                        \
+        if (cond)                                                            \
+            JMP();                                                           \
+        IFDEF(CONFIG_BRANCH_PREDICTION, pred_branch_direction(s->pc, cond)); \
     }
 
     INSTPAT_START();
@@ -205,11 +204,10 @@ static int decode_exec(Decode *s)
     //         : SEXT((int32_t)WORD(src1) / (int32_t)WORD(src2), 32));
     INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal, J, R(dest) = s->snpc; JMP();
             IFDEF(CONFIG_FTRACE, check_call(s->dnpc));
-            IFDEF(CONFIG_BRANCH_PREDICTION, if (dest == 1 || dest == 5) call_update_pred(s->snpc);
-                  else jmp_check_pred(s->pc, s->dnpc)));
+            IFDEF(CONFIG_BRANCH_PREDICTION, if (dest == 1 || dest == 5) pred_call(s->snpc)));
     INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr, I, R(dest) = s->snpc; s->dnpc = (src1 + imm) & ~1;
             IFDEF(CONFIG_FTRACE, check_call(s->dnpc); check_ret(INSTPAT_INST(s)));
-            IFDEF(CONFIG_BRANCH_PREDICTION, jalr_check_pred(rs1, dest, s->pc, s->snpc, s->dnpc)));
+            IFDEF(CONFIG_BRANCH_PREDICTION, jalr_check_pred(rs1, dest, s->pc, s->snpc, s->dnpc)); is_ct_inst = true);
     INSTPAT("??????? ????? ????? 000 ????? 00000 11", lb, I, R(dest) = SEXT(Mr(src1 + imm, 1), 8));
     INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu, I, R(dest) = Mr(src1 + imm, 1));
     INSTPAT("??????? ????? ????? 011 ????? 00000 11", ld, I, R(dest) = Mr(src1 + imm, 8));
