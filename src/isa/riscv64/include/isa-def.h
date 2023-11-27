@@ -1,8 +1,9 @@
 #ifndef __ISA_RISCV64_H__
 #define __ISA_RISCV64_H__
 
-#include "csr.h"
 #include <common.h>
+
+#include "csr.h"
 
 typedef struct
 {
@@ -18,7 +19,5 @@ typedef struct
         uint32_t val;
     } inst;
 } riscv64_ISADecodeInfo;
-
-#define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
 
 #endif

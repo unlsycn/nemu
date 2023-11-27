@@ -4,7 +4,7 @@
 #include <common.h>
 
 #define MXLEN 64
-#define CSRS(f) f(mepc, 0x341) f(mtvec, 0x305) f(mstatus, 0x300) f(mcause, 0x342) f(cycle, 0xc00)
+#define CSRS(f) f(mepc, 0x341) f(mtvec, 0x305) f(mstatus, 0x300) f(mcause, 0x342) f(cycle, 0xc00) f(satp, 0x180)
 
 #define _WORD_T(val) word_t val;
 #define CSR_TYPE(name, ...)           \
@@ -23,6 +23,7 @@ CSR_TYPE(mstatus, UIE : 1, SIE : 1, WPRI1 : 1, MIE : 1, UPIE : 1, SPIE : 1, WPRI
          : MXLEN - 37, SD : 1)
 CSR_TYPE(mcause, code : MXLEN - 1, intr : 1)
 CSR_TYPE(cycle, cycle : MXLEN)
+CSR_TYPE(satp, ppn : 44, asid : 16, mode : 4)
 #undef _WORD_T
 
 typedef struct
