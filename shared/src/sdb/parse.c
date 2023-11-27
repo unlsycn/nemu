@@ -43,7 +43,7 @@ HANDLER_PAT(MOD)
 MAP(UNARY_PAT, LOGI_NOT, BIT_NOT, POS, NEG);
 HANDLER_PAT(DEREF)
 {
-    I = vaddr_read(LHS, 1);
+    I = vaddr_read(LHS, 8);
     return this->value;
 }
 HANDLER_PAT(reg)

@@ -90,8 +90,12 @@ bool travel_wp()
         if (memcmp(&cur_value, &cur->last_value, sizeof(ASTValue)))
         {
             ret = true;
+#ifdef CONFIG_STOP_AT_WP
             printf("Watchpoint %d hit.\n", cur->NO);
-            printf("%s= " FMT_WORD_LH "\n", cur->expr, cur_value.i);
+            printf("[watchpoint] %s = " FMT_WORD_LH "\n", cur->expr, cur_value.i);
+#else
+            log_write("[watchpoint] %s = " FMT_WORD_LH "\n", cur->expr, cur_value.i);
+#endif
         }
         cur->last_value = cur_value;
     }

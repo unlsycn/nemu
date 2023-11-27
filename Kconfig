@@ -192,7 +192,11 @@ config GOLDENTRACE
 config WATCHPOINT
   bool "Enable watchpoint"
   default y
-
+  
+config STOP_AT_WP
+  depends on WATCHPOINT
+  bool "Stop execution when a watchpoint hit"
+  default y
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF

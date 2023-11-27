@@ -45,7 +45,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc)
 #ifdef CONFIG_WATCHPOINT
     if (nemu_state.state == NEMU_RUNNING && travel_wp())
     {
-        nemu_state.state = NEMU_STOP;
+        IFDEF(CONFIG_STOP_AT_WP, nemu_state.state = NEMU_STOP);
     }
 #endif
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
@@ -109,7 +109,7 @@ static void statistic()
         Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
     else
         Log("Finish running in less than 1 us and can not calculate the simulation frequency");
-    cache_statistic();
+    IFDEF(CONFIG_CACHE_SIM, cache_statistic());
     IFDEF(CONFIG_BRANCH_PREDICTION, bp_statistic());
 }
 
