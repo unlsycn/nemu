@@ -102,8 +102,8 @@ void check_call(uint64_t addr)
     {
         if (addr == cur->addr)
         {
-            log_write("[ftrace] %*scall %s@" FMT_WORD_LH "\n", MIN(indents, INDENT_MAX), " ", cur->name, addr);
-            indents++;
+            log_write("[ftrace] %*scall %s@" FMT_WORD_LH "\n", indents, " ", cur->name, addr);
+            indents = indents + 1 > INDENT_MAX ? 0 : indents + 1;
             return;
         }
         cur = cur->next;
@@ -116,7 +116,7 @@ void check_ret(uint32_t inst)
         return;
     if (inst == 0x8067)
     {
-        indents--;
-        log_write("[ftrace] %*sret\n", MIN(indents, INDENT_MAX), " ");
+        indents = indents - 1 < 0 ? 0 : indents - 1;
+        log_write("[ftrace] %*sret\n", indents, " ");
     }
 }
