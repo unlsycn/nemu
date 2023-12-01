@@ -57,7 +57,6 @@ static void exec_once(Decode *s, vaddr_t pc)
     s->snpc = pc; // snpc + 4 in inst_fecth
     isa_exec_once(s);
     cpu.pc = s->dnpc; // dnpc is determined in decoding
-    cpu.csr.mcycle->val++;
 #ifdef CONFIG_ITRACE  // output insts and disassembly to Deocde.logbuf
     char *p = s->logbuf;
     p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
