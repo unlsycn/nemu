@@ -1,6 +1,7 @@
-#include "csr.h"
 #include <isa.h>
 #include <memory/paddr.h>
+
+#include "csr.h"
 
 // this is not consistent with uint8_t
 // but it is ok since we do not access the array directly
@@ -15,6 +16,9 @@ static void restart()
 
     /* The zero register is always 0. */
     cpu.gpr[0] = 0;
+
+    // the initial privilege is M-mode
+    cpu.priv = PRIV_M;
 
     init_csr();
 }

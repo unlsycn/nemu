@@ -8,6 +8,9 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc)
     // set exception number
     cpu.csr.mcause->val = NO;
 
+    cpu.csr.mstatus->MPP = cpu.priv;
+    cpu.priv = PRIV_M;
+
     cpu.csr.mstatus->MPIE = cpu.csr.mstatus->MIE;
     cpu.csr.mstatus->MIE = 0;
 

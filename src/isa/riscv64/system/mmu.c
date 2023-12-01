@@ -20,23 +20,23 @@ int isa_mmu_check(vaddr_t vaddr, int len, int type)
     }
 }
 
-// FIXME: the return value should be pg_paddr | MEM_RET_OK if the translation succeed
+// TODO: add more flag check
 paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type)
 {
-    if (type == MMU_DIRECT)
-        return vaddr;
-    if (type == MMU_FAIL)
-        return MEM_RET_FAIL;
-
     paddr_t base = cpu.csr.satp->ppn << PG_OFFSET;
-    PageTableEntry pte;
     for (int lv = 1; lv <= 3; lv++)
     {
         paddr_t pg_paddr = base + vpn(vaddr, lv);
-        pte = (PageTableEntry)paddr_read(pg_paddr, 8);
-        if (!pte.v) // invalid pte
+        if (lv == 3)
+            return pg_paddr | MEM_RET_OK;
+        PageTableEntry pte = (PageTableEntry)paddr_read(pg_paddr, 8);
+        if (!pte.v || (!pte.r && pte.w))
             return MEM_RET_FAIL;
+
         base = pte.ppn << PG_OFFSET;
     }
-    return (pte.ppn << PG_OFFSET) + BITS(vaddr, PG_OFFSET - 1, 0);
+
+    panic("Unexcepted Page Fault");
+    isa_raise_intr(type == MEM_TYPE_IFETCH ? 12 : type == MEM_TYPE_READ ? 13 : 15, cpu.pc);
+    return MEM_RET_FAIL;
 }

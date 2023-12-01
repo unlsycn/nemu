@@ -7,6 +7,7 @@
 #include "csr.h"
 #include "debug.h"
 #include "ftrace.h"
+#include "isa-def.h"
 #include "isa.h"
 #include "local-include/reg.h"
 #include "macro.h"
@@ -268,11 +269,10 @@ static int decode_exec(Decode *s)
     INSTPAT("??????? ????? ????? 101 ????? 11100 11", csrrwi, I, if (dest != 0) R(dest) = Cr(imm); Cw(imm, rs1););
 
     INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
-    INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N,
-            s->dnpc = isa_raise_intr(11, s->pc)); // Machine external interrupt
+    INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N, s->dnpc = isa_raise_intr(8 + cpu.priv, s->pc));
 
-    INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, R, s->dnpc = CSR.mepc->mepc; CSR.mstatus->MIE = CSR.mstatus->MPIE;
-            CSR.mstatus->MPIE = 1); // no need to modify MPP because NEMU only supports M-mode indeed
+    INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, R, s->dnpc = CSR.mepc->mepc; cpu.priv = CSR.mstatus->MPP;
+            CSR.mstatus->MPP = PRIV_U; CSR.mstatus->MIE = CSR.mstatus->MPIE; CSR.mstatus->MPIE = 1);
     INSTPAT("0000000 00000 00000 001 00000 00011 11", fence.i, I, flush_cache());
     INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, s->dnpc = isa_raise_intr(2, s->pc));
     INSTPAT_END();

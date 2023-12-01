@@ -19,7 +19,7 @@ typedef union PageTableEntry {
         word_t ppn : 44;
         word_t reserved : 10;
     };
-    uintptr_t pte;
+    uintptr_t val;
 } PageTableEntry;
 
 inline paddr_t vpn(vaddr_t va, int lv)
