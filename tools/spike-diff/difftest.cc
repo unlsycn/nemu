@@ -1,7 +1,10 @@
-#include "../../include/common.h"
-#include "mmu.h"
-#include "sim.h"
 #include <difftest-def.h>
+
+#include "../../include/common.h"
+#include "../../src/isa/riscv64/include/csr.h"
+#include "mmu.h"
+#include "processor.h"
+#include "sim.h"
 
 #define NR_GPR MUXDEF(CONFIG_RVE, 16, 32)
 
@@ -22,6 +25,8 @@ struct diff_context_t
 {
     word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
     word_t pc;
+    CSRs csr;
+    uint32_t priv;
 };
 
 static sim_t *s = NULL;
@@ -39,6 +44,12 @@ void sim_t::diff_step(uint64_t n)
     step(n);
 }
 
+#define PLACE_CSR(name, ignored) uint64_t CONCAT(csr_, name) = 0;
+MAP(CSRS, PLACE_CSR);
+#define GET_CSR(name, ignored)                \
+    CONCAT(csr_, name) = state->name->read(); \
+    ctx->csr.name = (CONCAT(name, _t *)) & CONCAT(csr_, name);
+
 void sim_t::diff_get_regs(void *diff_context)
 {
     struct diff_context_t *ctx = (struct diff_context_t *)diff_context;
@@ -47,8 +58,12 @@ void sim_t::diff_get_regs(void *diff_context)
         ctx->gpr[i] = state->XPR[i];
     }
     ctx->pc = state->pc;
+    MAP(CSRS, GET_CSR)
+
+    ctx->priv = state->prv;
 }
 
+#define SET_CSR(name, ignored) state->name->write(ctx->csr.name->val);
 void sim_t::diff_set_regs(void *diff_context)
 {
     struct diff_context_t *ctx = (struct diff_context_t *)diff_context;
@@ -57,6 +72,9 @@ void sim_t::diff_set_regs(void *diff_context)
         state->XPR.write(i, (sword_t)ctx->gpr[i]);
     }
     state->pc = ctx->pc;
+    MAP(CSRS, SET_CSR)
+
+    // no need to change priv mannually
 }
 
 void sim_t::diff_memcpy(reg_t dest, void *src, size_t n)
