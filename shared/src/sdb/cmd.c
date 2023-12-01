@@ -51,8 +51,12 @@ ASTValue cmd_p(ASTNode *this)
 
 ASTValue cmd_w(ASTNode *this)
 {
+#ifdef CONFIG_WATCHPOINT
     printf("Watchpoint created: Watchpoint %d.\n", new_wp(this->left_child));
     this->value.i = SDB_WP;
+#else
+    printf("Watchpoint is disabled\n");
+#endif
     return this->value;
 }
 

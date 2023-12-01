@@ -210,6 +210,7 @@ void dcache_write(paddr_t addr, int len, word_t data)
 
 void flush_cache()
 {
+    IFNDEF(CONFIG_CACHE_SIM, return);
     IFDEF(CONFIG_CTRACE, log_write("[ctrace] cache flushed\n"));
     for (int way = 0; way < WAY_COUNT; way++)
     {
