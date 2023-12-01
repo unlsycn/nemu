@@ -1,5 +1,5 @@
 #include "csr.h"
-#include "common.h"
+
 #include <isa.h>
 
 word_t csr_space[4096];
@@ -39,12 +39,12 @@ void csr_write(uint16_t addr, word_t data)
         panic("TODO: CSR at %x invalid to write. Should raise a instruction exception.", addr);
 }
 
-void csr_display()
+void csr_display(CPU_state *state)
 {
+    word_t **csr = (word_t **)&state->csr;
     for (int i = 0; i < sizeof(CSRs) / sizeof(mepc_t *); i++)
     {
-        word_t **csr = (word_t **)&cpu.csr;
-        printf("%-8s" FMT_WORD_LH "  " FMT_WORD_LD "\n", csr_name[i], **csr, **csr);
-        (*csr)++;
+        printf(ANSI_FMT("%-8s", ANSI_FG_MAGENTA) FMT_WORD_LH "  " FMT_WORD_LD "\n", csr_name[i], **csr, **csr);
+        csr++;
     }
 }

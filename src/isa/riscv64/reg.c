@@ -1,20 +1,29 @@
 #include "local-include/reg.h"
-#include "csr.h"
+
 #include <isa.h>
+
+#include "utils.h"
 
 const char *regs[] = {"zero", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
                       "a1",   "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
                       "s6",   "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
 
-void isa_reg_display()
+void isa_reg_display(CPU_state *state)
 {
-    printf("Reg     %-18s  %-20s\n", "Hex", "Dec");
-    printf("[pc]    " FMT_WORD "\n", cpu.pc);
+    printf(ANSI_FMT("[pc]    " FMT_WORD "\n", ANSI_FG_MAGENTA), state->pc);
+
+    const int column = 2;
+    for (int i = 0; i < column; i++)
+        printf(ANSI_FMT("Reg     %-18s  %-20s", ANSI_FG_GREEN), "Hex", "Dec");
+    printf("\n");
     for (int i = 0; i < 32; i++)
     {
-        printf("%-8s" FMT_WORD_LH "  " FMT_WORD_LD "\n", regs[i], gpr(i), gpr(i));
+        printf(ANSI_FMT("%-8s", ANSI_FG_MAGENTA) FMT_WORD_LH "  " FMT_WORD_LD, regs[i], gpr(i), gpr(i));
+        if (i % column == column - 1 || i == 31)
+            printf("\n");
     }
-    csr_display();
+
+    csr_display(state);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success)

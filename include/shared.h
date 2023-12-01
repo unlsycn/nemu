@@ -7,7 +7,10 @@
 #include <isa.h>
 #include <memory/vaddr.h>
 
-#define reg_display isa_reg_display
+inline void reg_display()
+{
+    isa_reg_display(&cpu);
+}
 #define reg_str2val isa_reg_str2val
 
 extern void quit();
