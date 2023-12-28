@@ -31,20 +31,6 @@ void *sdb_calloc(size_t __nmemb, size_t __size)
     return cur_ptr->ptr;
 }
 
-static void discard_memlog()
-{
-    if (head_log.next == NULL)
-        return;
-    Memlog *log = head_log.next;
-    while (log->ptr != NULL)
-    {
-        free(log->ptr);
-        if (log->next == NULL)
-            return;
-        log = log->next;
-    }
-}
-
 static void clear_memlog(Memlog *log)
 {
     if (log == NULL)
@@ -119,11 +105,13 @@ void sdb_mainloop()
     {
         if (setjmp(sdb_env))
         {
-            discard_memlog();
+            clear_memlog(head_log.next);
+            head_log.next = NULL;
             continue;
         }
         cur_ptr = &head_log;
         clear_memlog(head_log.next);
+        head_log.next = NULL;
 
         Token *tokens = tokenize(stmt);
 
