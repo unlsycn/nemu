@@ -16,15 +16,13 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
     // check priv
     result &= difftest_check_reg("priv", pc, ref_r->priv, cpu.priv);
 
-    // skip comparing mcycle
-    ref_r->csr.mcycle->val = cpu.csr.mcycle->val;
-
     word_t **dut_csr_p = (word_t **)&cpu.csr;
     word_t **ref_csr_p = (word_t **)&ref_r->csr;
-    for (int i = 0; i < sizeof(CSRs) / sizeof(mepc_t *); i++)
+    for (int i = 0; i < sizeof(CSRs) / sizeof(csr_t *); i++)
     {
         extern char *csr_name[];
-        result &= difftest_check_reg(csr_name[i], pc, **ref_csr_p, **dut_csr_p);
+        if (*ref_csr_p)
+            result &= difftest_check_reg(csr_name[i], pc, **ref_csr_p, **dut_csr_p);
         dut_csr_p++;
         ref_csr_p++;
     }
