@@ -68,9 +68,9 @@ void parse_elf(const char *elf_file)
 
     // read string table
     Elf64_Shdr *strtab_shptr = &section_header[symtab_shptr->sh_link];
+    Assert(strtab_shptr, "Cannot find strtab.");
     char *strtab = malloc(strtab_shptr->sh_size);
     read_section(strtab_shptr, strtab, file);
-    Assert(strtab_shptr != NULL, "Cannot find strtab.");
 
     // read functions
     int symbol_count = symtab_shptr->sh_size / sizeof(Elf64_Sym);
