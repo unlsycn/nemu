@@ -1,3 +1,4 @@
+#include "common.h"
 #include "sdb.h"
 
 #define ARG_1 this->left_child->handler(this->left_child)
@@ -45,7 +46,9 @@ ASTValue cmd_si(ASTNode *this)
 
 ASTValue cmd_p(ASTNode *this)
 {
-    printf(FMT_WORD_LD "\n", ARG_1.i);
+    word_t val = ARG_1.i;
+    printf(ANSI_FMT("%-18s  %-20s\n", ANSI_FG_GREEN), "Hex", "Dec");
+    printf(FMT_WORD_LH "  " FMT_WORD_LD "\n", val, val);
     return this->value;
 }
 
