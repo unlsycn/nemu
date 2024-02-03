@@ -123,6 +123,9 @@ static inline void jalr_check_pred(word_t rs1, word_t rd, uint64_t pc, uint64_t 
         pred_ret(dnpc);
 }
 
+word_t mret();
+word_t sret();
+
 static int decode_exec(Decode *s)
 {
     int dest = 0;
@@ -271,10 +274,10 @@ static int decode_exec(Decode *s)
     INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
     INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, N, s->dnpc = isa_raise_intr(8 + cpu.priv, s->pc));
 
-    INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, R, s->dnpc = CSR.mepc->mepc; cpu.priv = CSR.mstatus->MPP;
-            CSR.mstatus->MPP = PRIV_U; CSR.mstatus->MIE = CSR.mstatus->MPIE; CSR.mstatus->MPIE = 1);
+    INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, R, s->dnpc = mret());
+    INSTPAT("0001000 00010 00000 000 00000 11100 11", sret, R, s->dnpc = sret());
     INSTPAT("0000000 00000 00000 001 00000 00011 11", fence.i, I, flush_cache());
-    INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, s->dnpc = isa_raise_intr(2, s->pc));
+    INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, INV(s->pc); s->dnpc = isa_raise_intr(2, s->pc));
     INSTPAT_END();
 
     R(0) = 0; // reset $zero to 0

@@ -5,10 +5,13 @@
 #include <memory/vaddr.h>
 
 #include "common.h"
+#include "isa-def.h"
 
 int isa_mmu_check(vaddr_t vaddr, int len, int type)
 {
     uint64_t mode = cpu.csr.satp->mode;
+    if (cpu.priv == PRIV_M)
+        return MMU_DIRECT;
     switch (mode)
     {
     case 0:
@@ -30,13 +33,12 @@ paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type)
         if (lv == 3)
             return pg_paddr | MEM_RET_OK;
         PageTableEntry pte = (PageTableEntry)paddr_read(pg_paddr, 8);
-        if (!pte.v || (!pte.r && pte.w))
+        if (!pte.v || (!pte.r && pte.w)) // invalid pte
             return MEM_RET_FAIL;
 
         base = pte.ppn << PG_OFFSET;
     }
 
     panic("Unexcepted Page Fault");
-    isa_raise_intr(type == MEM_TYPE_IFETCH ? 12 : type == MEM_TYPE_READ ? 13 : 15, cpu.pc);
     return MEM_RET_FAIL;
 }

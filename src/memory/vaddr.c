@@ -6,6 +6,8 @@
 
 paddr_t addr_translate(vaddr_t vaddr, int len, int type)
 {
+    Assert((vaddr & (len - 1)) == 0, "Misalign address = " FMT_WORD, vaddr);
+
     int mmu_mode = isa_mmu_check(vaddr, len, type);
     if (mmu_mode == MMU_DIRECT)
         return vaddr;
@@ -13,10 +15,22 @@ paddr_t addr_translate(vaddr_t vaddr, int len, int type)
         panic("MMU Fail: Invalid satp mode");
 
     paddr_t pg_paddr = isa_mmu_translate(vaddr, len, type);
-    Assert(!(pg_paddr & MEM_RET_FAIL), "Page fault at vaddr = %lx", vaddr);
-    PageTableEntry pte = (PageTableEntry)paddr_read(pg_paddr, 8);
+    if (pg_paddr & MEM_RET_FAIL)
+        goto page_fault;
 
-    return (pte.ppn << PG_OFFSET) + BITS(vaddr, PG_OFFSET - 1, 0);
+    PageTableEntry pte = (PageTableEntry)paddr_read(pg_paddr, 8);
+    if (!pte.v || (!pte.r && pte.w)) // invalid pte
+        goto page_fault;
+    if (pte.u ? (cpu.priv == PRIV_S) && (!cpu.csr.sstatus->SUM || type == MEM_TYPE_IFETCH)
+              : cpu.priv != PRIV_S) // wrong privilege
+        goto page_fault;
+
+    return (pte.ppn << PG_OFFSET) | BITS(vaddr, PG_OFFSET - 1, 0);
+
+page_fault:
+    panic("Page fault at vaddr = " FMT_WORD "\npte.v = %d, pte.u = %d, priv = %d, SUM = %d", vaddr, pte.v, pte.u, cpu.priv,
+          cpu.csr.sstatus->SUM);
+    isa_raise_intr(type == MEM_TYPE_IFETCH ? 12 : type == MEM_TYPE_READ ? 13 : 15, cpu.pc);
 }
 
 word_t vaddr_ifetch(vaddr_t addr, int len)

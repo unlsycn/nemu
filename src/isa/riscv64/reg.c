@@ -2,6 +2,7 @@
 
 #include <isa.h>
 
+#include "csr.h"
 #include "utils.h"
 
 const char *regs[] = {"zero", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
@@ -26,6 +27,9 @@ void isa_reg_display(CPU_state *state)
     csr_display(state);
 }
 
+extern size_t csr_count;
+extern char *csr_name[];
+extern uint16_t csr_addr[];
 word_t isa_reg_str2val(const char *s, bool *success)
 {
     if (strcmp(s, "pc") == 0)
@@ -39,6 +43,14 @@ word_t isa_reg_str2val(const char *s, bool *success)
         {
             *success = true;
             return gpr(i);
+        }
+    }
+    for (int i = 0; i < csr_count; i++)
+    {
+        if (strcmp(s, csr_name[i]) == 0)
+        {
+            *success = true;
+            return csr_read(csr_addr[i]);
         }
     }
     *success = false;
