@@ -1,11 +1,9 @@
 #include "mmu.h"
 
 #include <isa.h>
-#include <memory/paddr.h>
-#include <memory/vaddr.h>
 
 #include "common.h"
-#include "isa-def.h"
+#include "memory/cache.h"
 
 int isa_mmu_check(vaddr_t vaddr, int len, int type)
 {
@@ -32,7 +30,7 @@ paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type)
         paddr_t pg_paddr = base + vpn(vaddr, lv);
         if (lv == 3)
             return pg_paddr | MEM_RET_OK;
-        PageTableEntry pte = (PageTableEntry)paddr_read(pg_paddr, 8);
+        PageTableEntry pte = (PageTableEntry)dcache_read(pg_paddr, 8);
         if (!pte.v || (!pte.r && pte.w)) // invalid pte
             return MEM_RET_FAIL;
 

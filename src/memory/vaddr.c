@@ -18,7 +18,7 @@ paddr_t addr_translate(vaddr_t vaddr, int len, int type)
     if (pg_paddr & MEM_RET_FAIL)
         goto page_fault;
 
-    PageTableEntry pte = (PageTableEntry)paddr_read(pg_paddr, 8);
+    PageTableEntry pte = (PageTableEntry)dcache_read(pg_paddr, 8);
     if (!pte.v || (!pte.r && pte.w)) // invalid pte
         goto page_fault;
     if (pte.u ? (cpu.priv == PRIV_S) && (!cpu.csr.sstatus->SUM || type == MEM_TYPE_IFETCH)
@@ -37,14 +37,14 @@ word_t vaddr_ifetch(vaddr_t addr, int len)
 {
     paddr_t paddr = addr_translate(addr, len, MEM_TYPE_IFETCH);
 
-    return MUXDEF(CONFIG_CACHE_SIM, icache_fetch(paddr, len), paddr_read(paddr, len));
+    return icache_fetch(paddr, len);
 }
 
 word_t vaddr_read(vaddr_t addr, int len)
 {
     paddr_t paddr = addr_translate(addr, len, MEM_TYPE_READ);
 
-    word_t data = MUXDEF(CONFIG_CACHE_SIM, dcache_read(paddr, len), paddr_read(paddr, len));
+    word_t data = dcache_read(paddr, len);
 
 #ifdef CONFIG_MTRACE
     if (paddr >= CONFIG_MTRACE_LEFT && paddr <= CONFIG_MTRACE_RIGHT)
@@ -66,5 +66,5 @@ void vaddr_write(vaddr_t addr, int len, word_t data)
                   addr, paddr, len, cpu.pc, data);
 #endif
 
-    MUXDEF(CONFIG_CACHE_SIM, dcache_write(paddr, len, data), paddr_write(paddr, len, data));
+    dcache_write(paddr, len, data);
 }

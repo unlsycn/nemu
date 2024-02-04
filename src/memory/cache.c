@@ -183,21 +183,28 @@ static word_t cache_access(cache_t *cache, paddr_t addr, int len, bool is_write,
 
 word_t icache_fetch(paddr_t addr, int len)
 {
+#ifdef CONFIG_CACHE_SIM
     return cache_access(&inst_cache, addr, len, false, 0);
+#else
+    return paddr_read(addr, len);
+#endif
 }
 
 word_t dcache_read(paddr_t addr, int len)
 {
+#ifdef CONFIG_CACHE_SIM
     if (likely(in_pmem(addr)))
     {
         IFDEF(CONFIG_CTRACE, log_write("[ctrace] READ D-Cache with address = " FMT_PADDR "\n", addr));
         return cache_access(&data_cache, addr, len, false, 0);
     }
+#endif
     return paddr_read(addr, len);
 }
 
 void dcache_write(paddr_t addr, int len, word_t data)
 {
+#ifdef CONFIG_CACHE_SIM
     if (likely(in_pmem(addr)))
     {
         IFDEF(CONFIG_CTRACE,
@@ -205,6 +212,7 @@ void dcache_write(paddr_t addr, int len, word_t data)
         Assert(cache_access(&data_cache, addr, len, true, data) == 0, "cache write with non-zero return value");
         return;
     }
+#endif
     paddr_write(addr, len, data);
 }
 
