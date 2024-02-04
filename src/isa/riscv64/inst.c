@@ -277,6 +277,7 @@ static int decode_exec(Decode *s)
     INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, R, s->dnpc = mret());
     INSTPAT("0001000 00010 00000 000 00000 11100 11", sret, R, s->dnpc = sret());
     INSTPAT("0000000 00000 00000 001 00000 00011 11", fence.i, I, flush_cache());
+    INSTPAT("0001001 ????? ????? 000 00000 11100 11", sfence.vma, R);
     INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, INV(s->pc); s->dnpc = isa_raise_intr(2, s->pc));
     INSTPAT_END();
 
